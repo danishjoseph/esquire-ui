@@ -29,9 +29,8 @@ import { Component, input } from '@angular/core';
       </div>
     </div>
   `,
-  styles: ``,
 })
-export class BasicCard {
+export class Card {
   readonly title = input.required<string>();
   readonly desc = input<string>('');
   readonly className = input<string>('');
