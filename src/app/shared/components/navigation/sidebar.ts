@@ -189,6 +189,7 @@ interface NavItem {
                           routerLinkActive="menu-item-active"
                           class="menu-item group"
                           [class]="{ 'menu-item-inactive': !isActive(nav.path) }"
+                          (click)="onSubmenuClick()"
                         >
                           <span
                             class="menu-item-icon-size"
