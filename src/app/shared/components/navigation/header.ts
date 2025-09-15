@@ -1,9 +1,10 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { SidebarStore } from './sidebar-store';
+import { ThemeToggle } from '../ui/theme-toggle';
 
 @Component({
   selector: 'app-header',
-  imports: [],
+  imports: [ThemeToggle],
   template: `
     <header
       class="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 xl:border-b"
@@ -101,6 +102,7 @@ import { SidebarStore } from './sidebar-store';
         >
           <div class="flex items-center gap-2 2xsm:gap-3">
             <!-- ThemeToggleButton placeholder -->
+            <app-theme-toggle />
             <!-- NotificationDropdown placeholder -->
           </div>
           <!-- UserDropdown placeholder -->
