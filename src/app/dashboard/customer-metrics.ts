@@ -1,8 +1,7 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { Badge, BadgeColor } from '../shared/components/ui/badge';
 import { SafeHtmlPipe } from '../shared/pipe/safe-html-pipe';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map } from 'rxjs';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { DashboardClient } from './dashboard-client';
 
 @Component({
@@ -20,10 +19,14 @@ import { DashboardClient } from './dashboard-client';
         <div>
           <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
           <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-            {{ resource()?.totalCustomers }}
-            <span class="text-sm text-gray-400 dark:text-gray-400">
-              ( {{ resource()?.currentMonthCustomers }} )</span
-            >
+            @if (customerInfo(); as customerInfo) {
+              {{ customerInfo.totalCustomers }}
+              <span class="text-sm text-gray-400 dark:text-gray-400">
+                ( {{ customerInfo.currentMonthCustomers }} )
+              </span>
+            } @else {
+              {{ '-' }}
+            }
           </h4>
         </div>
         @if (cusomterKpi(); as kpi) {
@@ -31,6 +34,8 @@ import { DashboardClient } from './dashboard-client';
             <span [innerHTML]="kpi.icon | appSafeHtml"></span>
             {{ kpi.text }}
           </app-badge>
+        } @else {
+          <app-badge color="light"> No available </app-badge>
         }
       </div>
     </div>
@@ -45,19 +50,32 @@ export class CustomerMetrics {
   };
 
   protected dashboardClient = inject(DashboardClient);
-  protected resource = toSignal(
-    this.dashboardClient.fetchCustomerMetrics().pipe(
-      filter((res) => !!res.data),
-      map((res) => res.data.customerMetrics),
-    ),
-  );
+
+  private resource = rxResource({
+    params: () => signal(true),
+    stream: () => this.dashboardClient.fetchCustomerMetrics(),
+  });
+
+  readonly customerInfo = computed(() => {
+    if (this.resource.hasValue()) {
+      const customerInfo = this.resource.value()?.data.customerMetrics;
+      return {
+        currentMonthCustomers: customerInfo.currentMonthCustomers,
+        totalCustomers: customerInfo.totalCustomers,
+      };
+    }
+    return undefined;
+  });
 
   readonly cusomterKpi = computed(() => {
-    const kpi = this.resource();
-    if (kpi === null || kpi === undefined) return null;
-    const color: BadgeColor = kpi.monthlyGrowth > 0 ? 'success' : 'error';
-    const icon = kpi.monthlyGrowth > 0 ? this.icons.arrowUpIcon : this.icons.arrowDownIcon;
-    const text = `${kpi.monthlyGrowth}%`;
-    return { color, icon, text };
+    if (this.resource.hasValue()) {
+      const kpi = this.resource.value().data.customerMetrics;
+      if (kpi === null || kpi === undefined) return null;
+      const color: BadgeColor = kpi.monthlyGrowth > 0 ? 'success' : 'error';
+      const icon = kpi.monthlyGrowth > 0 ? this.icons.arrowUpIcon : this.icons.arrowDownIcon;
+      const text = `${kpi.monthlyGrowth}%`;
+      return { color, icon, text };
+    }
+    return undefined;
   });
 }
