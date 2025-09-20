@@ -1,5 +1,5 @@
-import { inject, Injectable } from '@angular/core';
-import { Apollo, gql } from 'apollo-angular';
+import { inject, Injectable, signal } from '@angular/core';
+import { Apollo, gql, QueryRef } from 'apollo-angular';
 import { ICustomerForm } from './customer-form';
 import { FormGroup } from '@angular/forms';
 import { map } from 'rxjs';
@@ -8,6 +8,16 @@ import { CUSTOMER_METRICS } from '../dashboard/dashboard-resource';
 type CreateCustomerInput = FormGroup<ICustomerForm>['value'];
 type UpdateCustomerInput = CreateCustomerInput & { id: number };
 type CustomerResponse = CreateCustomerInput;
+
+interface CustomersResponse {
+  customers: Customer[];
+}
+
+interface CustomersRequest {
+  offset: number;
+  limit: number;
+  search: string;
+}
 
 export interface Customer {
   id: number;
@@ -43,9 +53,9 @@ const CUSTOMER = gql`
   }
 `;
 
-const CUSTOMERS = gql<{ customers: Customer[] }, unknown>`
-  query Customers {
-    customers {
+const CUSTOMERS = gql<CustomersResponse, CustomersRequest>`
+  query Customers($limit: Int, $offset: Int, $search: String) {
+    customers(limit: $limit, offset: $offset, search: $search) {
       ...Customer
     }
   }
@@ -98,13 +108,18 @@ const DELETE = gql<boolean, number>`
 })
 export class CustomerResource {
   #apollo = inject(Apollo);
+  #customersRef?: QueryRef<CustomersResponse, CustomersRequest>;
+  #customersRequestState = signal<CustomersRequest | null>(null);
 
   create(createCustomerInput: CreateCustomerInput) {
     return this.#apollo
       .mutate({
         mutation: CREATE,
         variables: { createCustomerInput },
-        refetchQueries: [{ query: CUSTOMERS }, { query: CUSTOMER_METRICS }],
+        refetchQueries: [
+          { query: CUSTOMERS, variables: { ...this.#customersRequestState() } },
+          { query: CUSTOMER_METRICS },
+        ],
       })
       .pipe(map((res) => res.data));
   }
@@ -114,17 +129,25 @@ export class CustomerResource {
       .mutate({
         mutation: UPDATE,
         variables: { updateCustomerInput },
-        refetchQueries: [{ query: CUSTOMERS }],
+        refetchQueries: [{ query: CUSTOMERS, variables: { ...this.#customersRequestState() } }],
       })
       .pipe(map((res) => res.data));
   }
 
-  customers() {
-    return this.#apollo
-      .watchQuery({
-        query: CUSTOMERS,
-      })
-      .valueChanges.pipe(map((res) => res.data));
+  customers(limit: number, offset: number, search: string) {
+    this.#customersRequestState.set({ limit, offset, search });
+    this.#customersRef = this.#apollo.watchQuery({
+      query: CUSTOMERS,
+      variables: { offset, limit, search },
+      fetchPolicy: 'cache-and-network',
+    });
+    return this.#customersRef?.valueChanges.pipe(map((res) => res.data));
+  }
+
+  fetchMore(offset: number) {
+    this.#customersRef?.fetchMore({
+      variables: { offset },
+    });
   }
 
   customer(id: string) {
@@ -141,7 +164,7 @@ export class CustomerResource {
       .mutate({
         mutation: DELETE,
         variables: { id: +id },
-        refetchQueries: [{ query: CUSTOMERS }],
+        refetchQueries: [{ query: CUSTOMERS, variables: { ...this.#customersRequestState() } }],
       })
       .pipe(map((res) => res.data));
   }

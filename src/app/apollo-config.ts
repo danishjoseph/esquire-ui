@@ -3,6 +3,7 @@ import { ApolloClientOptions, ApolloLink, InMemoryCache } from '@apollo/client/c
 import { HttpLink } from 'apollo-angular/http';
 import { onError } from '@apollo/client/link/error';
 import { environment } from '../environments/environment';
+import { offsetLimitPagination } from '@apollo/client/utilities';
 
 export function apolloConfig(): ApolloClientOptions<unknown> {
   const httpLink = inject(HttpLink);
@@ -23,8 +24,18 @@ export function apolloConfig(): ApolloClientOptions<unknown> {
 
   const link = ApolloLink.from([errorLink, httpLink.create({ uri: environment.graphqlUri })]);
 
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          customers: offsetLimitPagination(['search']),
+        },
+      },
+    },
+  });
+
   return {
     link,
-    cache: new InMemoryCache(),
+    cache,
   };
 }
