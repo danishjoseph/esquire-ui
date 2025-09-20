@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { ApolloClientOptions, ApolloLink, InMemoryCache } from '@apollo/client/core';
 import { HttpLink } from 'apollo-angular/http';
 import { onError } from '@apollo/client/link/error';
-import { environment } from '../environments/environment.development';
+import { environment } from '../environments/environment';
 
 export function apolloConfig(): ApolloClientOptions<unknown> {
   const httpLink = inject(HttpLink);
