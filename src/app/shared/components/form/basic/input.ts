@@ -1,29 +1,38 @@
-import { NgClass } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, forwardRef, input, model, signal } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { Label } from './label';
+import { noop } from 'rxjs';
 
 @Component({
   selector: 'app-input',
-  imports: [NgClass],
+  imports: [ReactiveFormsModule, Label],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => Input),
+      multi: true,
+    },
+  ],
   template: `
+    @if (label()) {
+      <app-label [for]="id()">{{ label() }}</app-label>
+    }
     <div class="relative">
       <input
-        [type]="type()"
         [id]="id()"
-        [name]="name()"
+        [name]="id()"
+        [class]="inputClasses()"
+        [type]="type()"
         [placeholder]="placeholder()"
-        [value]="value()"
-        [min]="min()"
-        [max]="max()"
-        [step]="step()"
         [disabled]="disabled()"
-        [ngClass]="inputClasses"
+        [value]="value()"
         (input)="onInput($event)"
+        (blur)="onTouched()"
       />
-
       @if (hint()) {
         <p
           class="mt-1.5 text-xs"
-          [ngClass]="{
+          [class]="{
             'text-error-500': error(),
             'text-success-500': success(),
             'text-gray-500': !error() && !success(),
@@ -35,24 +44,31 @@ import { Component, input, output } from '@angular/core';
     </div>
   `,
 })
-export class Input {
+export class Input implements ControlValueAccessor {
+  readonly id = input.required<string>();
   readonly type = input<string>('text');
-  readonly id = input<string | undefined>('');
-  readonly name = input<string | undefined>('');
+  readonly label = input<string>('');
   readonly placeholder = input<string | undefined>('');
-  readonly value = input<string | number>('');
-  readonly min = input<string>();
-  readonly max = input<string>();
-  readonly step = input<number>();
-  readonly disabled = input<boolean>(false);
   readonly success = input<boolean>(false);
   readonly error = input<boolean>(false);
+  readonly disabled = model<boolean>(false);
   readonly hint = input<string>();
   readonly className = input<string>('');
 
-  readonly valueChange = output<string | number>();
+  #value = signal<string>('');
+  readonly value = this.#value.asReadonly();
 
-  get inputClasses(): string {
+  protected onChange: (_: string) => void = noop;
+  protected onTouched: () => void = noop;
+
+  onInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const newValue = input.value;
+    this.#value.set(newValue);
+    this.onChange(newValue);
+  }
+
+  readonly inputClasses = computed(() => {
     let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${this.className()}`;
 
     if (this.disabled()) {
@@ -65,10 +81,21 @@ export class Input {
       inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90  dark:focus:border-brand-800`;
     }
     return inputClasses;
+  });
+
+  writeValue(value: string) {
+    this.#value.set(value ?? '');
   }
 
-  onInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.valueChange.emit(this.type() === 'number' ? +input.value : input.value);
+  registerOnChange(fn: (value: string) => void) {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void) {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean) {
+    this.disabled.set(isDisabled);
   }
 }
