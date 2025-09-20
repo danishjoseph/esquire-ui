@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
+import { map } from 'rxjs';
 
 export interface CustomerMetrics {
   totalCustomers: number;
@@ -23,12 +24,14 @@ export const CUSTOMER_METRICS = gql<FetchCustomerMetricsResponse, unknown>`
 @Injectable({
   providedIn: 'root',
 })
-export class DashboardClient {
+export class DashboardResource {
   private apollo = inject(Apollo);
 
   fetchCustomerMetrics() {
-    return this.apollo.query({
-      query: CUSTOMER_METRICS,
-    });
+    return this.apollo
+      .watchQuery({
+        query: CUSTOMER_METRICS,
+      })
+      .valueChanges.pipe(map((res) => res.data));
   }
 }

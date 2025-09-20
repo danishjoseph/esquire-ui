@@ -3,6 +3,7 @@ import { Apollo, gql } from 'apollo-angular';
 import { ICustomerForm } from './customer-form';
 import { FormGroup } from '@angular/forms';
 import { map } from 'rxjs';
+import { CUSTOMER_METRICS } from '../dashboard/dashboard-resource';
 
 type CreateCustomerInput = FormGroup<ICustomerForm>['value'];
 type UpdateCustomerInput = CreateCustomerInput & { id: number };
@@ -103,7 +104,7 @@ export class CustomerResource {
       .mutate({
         mutation: CREATE,
         variables: { createCustomerInput },
-        refetchQueries: [{ query: CUSTOMERS }],
+        refetchQueries: [{ query: CUSTOMERS }, { query: CUSTOMER_METRICS }],
       })
       .pipe(map((res) => res.data));
   }
