@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { Badge, BadgeColor } from '../shared/components/ui/badge';
 import { SafeHtmlPipe } from '../shared/pipe/safe-html-pipe';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -52,7 +52,6 @@ export class CustomerMetrics {
   protected dashboardClient = inject(DashboardClient);
 
   private resource = rxResource({
-    params: () => signal(true),
     stream: () => this.dashboardClient.fetchCustomerMetrics(),
   });
 
