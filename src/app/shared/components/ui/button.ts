@@ -1,14 +1,13 @@
-import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { SafeHtmlPipe } from '../../pipe/safe-html-pipe';
 
 @Component({
   selector: 'app-button',
-  imports: [NgClass, SafeHtmlPipe],
+  imports: [SafeHtmlPipe],
   template: `
     <button
-      type="button"
-      [ngClass]="
+      [type]="type()"
+      [class]="
         'inline-flex items-center justify-center gap-2 rounded-lg transition ' +
         className() +
         ' ' +
@@ -32,7 +31,8 @@ import { SafeHtmlPipe } from '../../pipe/safe-html-pipe';
   `,
 })
 export class Button {
-  readonly size = input<'sm' | 'md'>('md');
+  readonly type = input<'submit' | 'reset' | 'button'>('button');
+  readonly size = input<'xs' | 'sm' | 'md'>('md');
   readonly variant = input<'primary' | 'outline'>('primary');
   readonly disabled = input(false);
   readonly className = input('');
@@ -42,6 +42,9 @@ export class Button {
   readonly btnClick = output<Event>();
 
   get sizeClasses(): string {
+    if (this.size() === 'xs') {
+      return 'px-2 py-2 text-xs'; // Adjust these values to fit your design
+    }
     return this.size() === 'sm' ? 'px-4 py-3 text-sm' : 'px-5 py-3.5 text-sm';
   }
 
