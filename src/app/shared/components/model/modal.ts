@@ -80,7 +80,7 @@ export class Modal {
   }
 
   onBackdropClick() {
-    if (!this.isFullscreen) {
+    if (!this.isFullscreen()) {
       this.closeEvent.emit();
     }
   }
