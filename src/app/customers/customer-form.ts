@@ -6,6 +6,7 @@ import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CustomerResource } from './customer-resource';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
+import { PhoneInput } from '../shared/components/form/phone-input';
 
 export interface ICustomerForm {
   name: NonNullable<FormControl<string>>;
@@ -22,7 +23,7 @@ export interface ICustomerForm {
 
 @Component({
   selector: 'app-customer-form',
-  imports: [Button, Modal, Input, ReactiveFormsModule],
+  imports: [Button, Modal, Input, ReactiveFormsModule, PhoneInput],
   template: `
     <app-modal
       [isOpen]="isOpen()"
@@ -59,20 +60,32 @@ export interface ICustomerForm {
               </div>
 
               <div class="col-span-1">
-                <app-input
+                <app-phone-input
                   id="mobile"
                   label="Mobile"
                   placeholder="Primary"
                   formControlName="mobile"
+                  [error]="form.getError('minlength', 'mobile')"
+                  [hint]="
+                    form.getError('minlength', 'mobile')
+                      ? 'This seems to be an invalid Number.'
+                      : ''
+                  "
                 />
               </div>
 
               <div class="col-span-1">
-                <app-input
+                <app-phone-input
                   id="alt_mobile"
                   label="Alternate Mobile"
                   placeholder="Secondary"
                   formControlName="alt_mobile"
+                  [error]="form.getError('minlength', 'alt_mobile')"
+                  [hint]="
+                    form.getError('minlength', 'alt_mobile')
+                      ? 'This seems to be an invalid Number.'
+                      : ''
+                  "
                 />
               </div>
 
@@ -173,7 +186,10 @@ export class CustomerForm {
 
   protected form = new FormGroup<ICustomerForm>({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    mobile: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    mobile: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(13)],
+    }),
     alt_mobile: new FormControl(null),
     email: new FormControl(null, [Validators.email]),
     address: new FormControl(null),
@@ -191,6 +207,7 @@ export class CustomerForm {
 
   constructor() {
     afterRenderEffect(() => {
+      this.form.reset();
       if (this.resource.hasValue()) {
         const data = this.resource.value().customer;
         this.form.patchValue(data);

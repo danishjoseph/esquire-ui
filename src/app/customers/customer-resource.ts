@@ -152,11 +152,12 @@ export class CustomerResource {
 
   customer(id: string) {
     return this.#apollo
-      .query({
+      .watchQuery({
         query: GET,
         variables: { id: +id },
+        fetchPolicy: 'no-cache',
       })
-      .pipe(map((res) => res.data));
+      .valueChanges.pipe(map((res) => res.data));
   }
 
   remove(id: string) {
