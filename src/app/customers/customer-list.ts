@@ -1,11 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CustomerTable } from './customer-table';
 import { PageBreadcrumb } from '../shared/components/ui/page-breadcrumb';
 import { CustomerResource } from './customer-resource';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { InfiniteScroll } from '../shared/directives/infinite-scroll';
 import { CustomerForm } from './customer-form';
-import { ModalStore } from '../shared/components/model/modal-store';
 import { Button } from '../shared/components/ui/button';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs';
@@ -58,7 +57,7 @@ import { debounceTime } from 'rxjs';
               size="sm"
               variant="primary"
               className="rounded-full"
-              (btnClick)="this.modalStore.openModal()"
+              (btnClick)="isOpen.set(true)"
               [startIcon]="addIcon"
             >
               Add Customer
@@ -66,9 +65,7 @@ import { debounceTime } from 'rxjs';
           </div>
         </div>
       </form>
-      @if (modalStore.isOpen()) {
-        <app-customer-form />
-      }
+      <app-customer-form [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
 
       <div class="max-w-full overflow-x-auto">
         @if (resource.hasValue()) {
@@ -87,7 +84,7 @@ import { debounceTime } from 'rxjs';
 })
 export class CustomerList {
   protected customerResource = inject(CustomerResource);
-  protected modalStore = inject(ModalStore);
+  protected isOpen = signal(false);
 
   readonly addIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10.0002H15.0006M10.0002 5V15.0006" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path></svg>`;
 

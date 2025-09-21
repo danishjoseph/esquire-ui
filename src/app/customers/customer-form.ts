@@ -1,7 +1,6 @@
-import { Component, effect, inject, input } from '@angular/core';
+import { afterRenderEffect, Component, inject, input, output } from '@angular/core';
 import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
-import { ModalStore } from '../shared/components/model/modal-store';
 import { Modal } from '../shared/components/model/modal';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CustomerResource } from './customer-resource';
@@ -26,6 +25,7 @@ export interface ICustomerForm {
   imports: [Button, Modal, Input, ReactiveFormsModule],
   template: `
     <app-modal
+      [isOpen]="isOpen()"
       [isFullscreen]="false"
       (closeEvent)="closeModal()"
       className="max-w-[700px] p-5 lg:p-10"
@@ -167,7 +167,8 @@ export interface ICustomerForm {
 })
 export class CustomerForm {
   readonly customerId = input('');
-  protected modalStore = inject(ModalStore);
+  readonly isOpen = input(false);
+  readonly closed = output();
   protected customerResource = inject(CustomerResource);
 
   protected form = new FormGroup<ICustomerForm>({
@@ -189,7 +190,7 @@ export class CustomerForm {
   });
 
   constructor() {
-    effect(() => {
+    afterRenderEffect(() => {
       if (this.resource.hasValue()) {
         const data = this.resource.value().customer;
         this.form.patchValue(data);
@@ -199,7 +200,7 @@ export class CustomerForm {
 
   closeModal() {
     this.form.reset();
-    this.modalStore.closeModal();
+    this.closed.emit();
   }
 
   save() {

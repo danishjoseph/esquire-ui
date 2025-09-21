@@ -1,5 +1,4 @@
 import { Component, DestroyRef, effect, inject, input, output } from '@angular/core';
-import { ModalStore } from './modal-store';
 
 @Component({
   selector: 'app-modal',
@@ -61,13 +60,11 @@ import { ModalStore } from './modal-store';
   },
 })
 export class Modal {
+  readonly isOpen = input.required();
   readonly closeEvent = output();
   readonly className = input();
   readonly showCloseButton = input(true);
   readonly isFullscreen = input(false);
-
-  protected modelStore = inject(ModalStore);
-  readonly isOpen = this.modelStore.isOpen;
 
   constructor() {
     effect(() => {
