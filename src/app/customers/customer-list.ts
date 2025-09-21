@@ -71,9 +71,13 @@ import { debounceTime } from 'rxjs';
 
       <div class="max-w-full overflow-x-auto">
         @if (resource.hasValue()) {
-          <div class="min-lg:max-h-96 overflow-y-auto">
+          <div class="overflow-y-auto max-h-[calc(100vh-150px)]">
             <app-customer-table [data]="resource.value().customers" />
-            <span appInfiniteScroll (scrolled)="loadMore(resource.value().customers.length)"></span>
+            <span
+              appInfiniteScroll
+              (scrolled)="loadMore(resource.value().customers.length)"
+              class="block h-6 w-full"
+            ></span>
           </div>
         }
       </div>
