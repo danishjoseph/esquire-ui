@@ -81,8 +81,12 @@ export interface ICustomerForm {
                   id="email"
                   label="Email"
                   type="text"
-                  placeholder="email"
+                  placeholder="Email"
                   formControlName="email"
+                  [error]="form.getError('email', 'email')"
+                  [hint]="
+                    form.getError('email', 'email') ? 'This is an invalid email address.' : ''
+                  "
                 />
               </div>
             </div>
@@ -170,7 +174,7 @@ export class CustomerForm {
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     mobile: new FormControl('', { nonNullable: true, validators: Validators.required }),
     alt_mobile: new FormControl(null),
-    email: new FormControl(null),
+    email: new FormControl(null, [Validators.email]),
     address: new FormControl(null),
     house_office: new FormControl(null),
     street_building: new FormControl(null),
