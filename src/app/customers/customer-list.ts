@@ -56,9 +56,10 @@ import { debounceTime } from 'rxjs';
             </div>
             <app-button
               size="sm"
-              variant="outline"
+              variant="primary"
               className="rounded-full"
               (btnClick)="this.modalStore.openModal()"
+              [startIcon]="addIcon"
             >
               Add Customer
             </app-button>
@@ -87,6 +88,8 @@ import { debounceTime } from 'rxjs';
 export class CustomerList {
   protected customerResource = inject(CustomerResource);
   protected modalStore = inject(ModalStore);
+
+  readonly addIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10.0002H15.0006M10.0002 5V15.0006" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path></svg>`;
 
   #limit = 10;
 
