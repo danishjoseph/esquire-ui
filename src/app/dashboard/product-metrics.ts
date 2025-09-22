@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { Badge } from '../shared/components/ui/badge';
+import { Component, computed, inject } from '@angular/core';
+import { Badge, BadgeColor } from '../shared/components/ui/badge';
 import { SafeHtmlPipe } from '../shared/pipe/safe-html-pipe';
 import { Button } from '../shared/components/ui/button';
 import { Router } from '@angular/router';
+import { DashboardResource } from './dashboard-resource';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-product-metrics',
@@ -19,13 +21,26 @@ import { Router } from '@angular/router';
       />
       <div class="flex items-end justify-between mt-5">
         <div>
-          <span class="text-sm text-gray-500 dark:text-gray-400">Products</span>
-          <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">359</h4>
+          <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
+          <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
+            @if (customerInfo(); as customerInfo) {
+              {{ customerInfo.totalCustomers }}
+              <span class="text-sm text-gray-400 dark:text-gray-400">
+                ( {{ customerInfo.currentMonthCustomers }} )
+              </span>
+            } @else {
+              {{ '-' }}
+            }
+          </h4>
         </div>
-        <app-badge color="error">
-          <span [innerHTML]="icons.arrowDownIcon | appSafeHtml"></span>
-          9.05%
-        </app-badge>
+        @if (cusomterKpi(); as kpi) {
+          <app-badge [color]="kpi.color">
+            <span [innerHTML]="kpi.icon | appSafeHtml"></span>
+            {{ kpi.text }}
+          </app-badge>
+        } @else {
+          <app-badge color="light"> No available </app-badge>
+        }
       </div>
     </div>
   `,
@@ -38,4 +53,32 @@ export class ProductMetrics {
   };
 
   protected router = inject(Router);
+  protected dashboardResource = inject(DashboardResource);
+
+  private resource = rxResource({
+    stream: () => this.dashboardResource.fetchProductMetrics(),
+  });
+
+  readonly customerInfo = computed(() => {
+    if (this.resource.hasValue()) {
+      const productInfo = this.resource.value()?.productMetrics;
+      return {
+        currentMonthCustomers: productInfo.currentMonthCount,
+        totalCustomers: productInfo.total,
+      };
+    }
+    return undefined;
+  });
+
+  readonly cusomterKpi = computed(() => {
+    if (this.resource.hasValue()) {
+      const kpi = this.resource.value()?.productMetrics;
+      if (kpi === null || kpi === undefined) return null;
+      const color: BadgeColor = kpi.monthlyGrowth > 0 ? 'success' : 'error';
+      const icon = kpi.monthlyGrowth > 0 ? this.icons.arrowUpIcon : this.icons.arrowDownIcon;
+      const text = `${kpi.monthlyGrowth}%`;
+      return { color, icon, text };
+    }
+    return undefined;
+  });
 }

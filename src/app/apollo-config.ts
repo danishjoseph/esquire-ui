@@ -29,6 +29,7 @@ export function apolloConfig(): ApolloClientOptions<unknown> {
       Query: {
         fields: {
           customers: offsetLimitPagination(['search']),
+          products: offsetLimitPagination(['search']),
         },
       },
     },

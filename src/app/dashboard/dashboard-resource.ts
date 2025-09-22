@@ -2,21 +2,36 @@ import { inject, Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
 import { map } from 'rxjs';
 
-export interface CustomerMetrics {
-  totalCustomers: number;
+export interface GrowthMetrics {
+  total: number;
   monthlyGrowth: number;
-  currentMonthCustomers: number;
+  currentMonthCount: number;
 }
 
-interface FetchCustomerMetricsResponse {
-  customerMetrics: CustomerMetrics;
+interface CustomerMetricsResponse {
+  customerMetrics: GrowthMetrics;
 }
-export const CUSTOMER_METRICS = gql<FetchCustomerMetricsResponse, unknown>`
+
+interface ProductMetricsResponse {
+  productMetrics: GrowthMetrics;
+}
+
+export const CUSTOMER_METRICS = gql<CustomerMetricsResponse, unknown>`
   query fetchCustomerMetrics {
     customerMetrics {
-      totalCustomers
+      total
       monthlyGrowth
-      currentMonthCustomers
+      currentMonthCount
+    }
+  }
+`;
+
+export const PRODUCT_METRICS = gql<ProductMetricsResponse, unknown>`
+  query fetchProductMetrics {
+    productMetrics {
+      total
+      monthlyGrowth
+      currentMonthCount
     }
   }
 `;
@@ -31,6 +46,14 @@ export class DashboardResource {
     return this.apollo
       .watchQuery({
         query: CUSTOMER_METRICS,
+      })
+      .valueChanges.pipe(map((res) => res.data));
+  }
+
+  fetchProductMetrics() {
+    return this.apollo
+      .watchQuery({
+        query: PRODUCT_METRICS,
       })
       .valueChanges.pipe(map((res) => res.data));
   }

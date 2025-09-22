@@ -64,8 +64,8 @@ export class CustomerMetrics {
     if (this.resource.hasValue()) {
       const customerInfo = this.resource.value()?.customerMetrics;
       return {
-        currentMonthCustomers: customerInfo.currentMonthCustomers,
-        totalCustomers: customerInfo.totalCustomers,
+        currentMonthCustomers: customerInfo.currentMonthCount,
+        totalCustomers: customerInfo.total,
       };
     }
     return undefined;
