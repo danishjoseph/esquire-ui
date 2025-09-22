@@ -6,6 +6,7 @@ import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ProductCategory, ProductResource } from './product-resource';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
+import { Option, Select } from '../shared/components/form/basic/select';
 
 export interface IProductForm {
   name: NonNullable<FormControl<string>>;
@@ -14,10 +15,25 @@ export interface IProductForm {
   brand: NonNullable<FormControl<string>>;
   model_name: FormControl<string>;
 }
+export const productCategoryOptions: Option[] = [
+  { value: ProductCategory.NORMAL_LAPTOP, label: 'Normal Laptop' },
+  { value: ProductCategory.GAMING_LAPTOP, label: 'Gaming Laptop' },
+  { value: ProductCategory.TABLET, label: 'Tablet' },
+  { value: ProductCategory.NORMAL_DESKTOP_CPU, label: 'Normal Desktop CPU' },
+  { value: ProductCategory.GAMING_CPU, label: 'Gaming CPU' },
+  { value: ProductCategory.MONITORS, label: 'Monitors' },
+  { value: ProductCategory.UPS, label: 'UPS' },
+  { value: ProductCategory.IPG_PRODUCTS, label: 'IPG Products' },
+  { value: ProductCategory.ACCESSORIES, label: 'Accessories' },
+  { value: ProductCategory.CCTV_DVR_NVR, label: 'CCTV DVR/NVR' },
+  { value: ProductCategory.CCTV_CAMERA, label: 'CCTV Camera' },
+  { value: ProductCategory.SMPS, label: 'SMPS' },
+  { value: ProductCategory.OTHERS, label: 'Others' },
+];
 
 @Component({
   selector: 'app-product-form',
-  imports: [Button, Modal, Input, ReactiveFormsModule],
+  imports: [Button, Modal, Input, ReactiveFormsModule, Select],
   template: `
     <app-modal
       [isOpen]="isOpen()"
@@ -53,11 +69,12 @@ export interface IProductForm {
           </div>
 
           <div class="col-span-1">
-            <app-input
+            <app-select
               id="category"
               label="Category"
-              placeholder="Product Category"
+              placeholder="Select Product Category"
               formControlName="category"
+              [options]="categoryOptions"
             />
           </div>
 
@@ -97,6 +114,7 @@ export class ProductForm {
   readonly isOpen = input(false);
   readonly closed = output();
   protected productResource = inject(ProductResource);
+  protected categoryOptions = productCategoryOptions;
 
   protected form = new FormGroup<IProductForm>({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
@@ -149,4 +167,20 @@ export class ProductForm {
       complete: () => this.closeModal(),
     });
   }
+
+  readonly productCategoryOptions: Option[] = [
+    { value: ProductCategory.NORMAL_LAPTOP, label: 'Normal Laptop' },
+    { value: ProductCategory.GAMING_LAPTOP, label: 'Gaming Laptop' },
+    { value: ProductCategory.TABLET, label: 'Tablet' },
+    { value: ProductCategory.NORMAL_DESKTOP_CPU, label: 'Normal Desktop CPU' },
+    { value: ProductCategory.GAMING_CPU, label: 'Gaming CPU' },
+    { value: ProductCategory.MONITORS, label: 'Monitors' },
+    { value: ProductCategory.UPS, label: 'UPS' },
+    { value: ProductCategory.IPG_PRODUCTS, label: 'IPG Products' },
+    { value: ProductCategory.ACCESSORIES, label: 'Accessories' },
+    { value: ProductCategory.CCTV_DVR_NVR, label: 'CCTV DVR/NVR' },
+    { value: ProductCategory.CCTV_CAMERA, label: 'CCTV Camera' },
+    { value: ProductCategory.SMPS, label: 'SMPS' },
+    { value: ProductCategory.OTHERS, label: 'Others' },
+  ];
 }

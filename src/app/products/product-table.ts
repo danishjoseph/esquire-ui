@@ -2,7 +2,7 @@ import { Component, inject, input, model, signal } from '@angular/core';
 import { Badge, BadgeColor } from '../shared/components/ui/badge';
 import { ProductCategory, ProductList, ProductResource } from './product-resource';
 import { Button } from '../shared/components/ui/button';
-import { ProductForm } from './product-form';
+import { productCategoryOptions, ProductForm } from './product-form';
 
 @Component({
   selector: 'app-product-table',
@@ -59,7 +59,7 @@ import { ProductForm } from './product-form';
             </td>
             <td class="px-4 sm:px-6 py-3.5 min-w-40">
               <app-badge size="sm" [color]="getBadgeColor(row.category)">
-                {{ row.category }}
+                {{ categoryInfoMap[row.category].label || 'Unknown Category' }}
               </app-badge>
             </td>
             <td class="px-4 sm:px-6 py-3.5">
@@ -98,9 +98,10 @@ import { ProductForm } from './product-form';
 })
 export class ProductTable {
   data = input.required<ProductList[]>();
+  categoryOptions = productCategoryOptions;
 
-  readonly viewIcon = `<svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-700 cursor-pointer size-5 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-500"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 4.5C7.80517 4.5 4.50422 7.28231 3 11C4.50422 14.7177 7.80517 17.5 12 17.5C16.1948 17.5 19.4958 14.7177 21 11C19.4958 7.28231 16.1948 4.5 12 4.5ZM12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 8.51472 9.51472 6.5 12 6.5C14.4853 6.5 16.5 8.51472 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5ZM12 9C10.6193 9 9.5 10.1193 9.5 11.5C9.5 12.8807 10.6193 14 12 14C13.3807 14 14.5 12.8807 14.5 11.5C14.5 10.1193 13.3807 9 12 9Z" fill="currentColor"></path></svg>`;
-  readonly deleteIcon = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+  readonly viewIcon = `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-700 cursor-pointer size-4 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-500"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 4.5C7.80517 4.5 4.50422 7.28231 3 11C4.50422 14.7177 7.80517 17.5 12 17.5C16.1948 17.5 19.4958 14.7177 21 11C19.4958 7.28231 16.1948 4.5 12 4.5ZM12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 8.51472 9.51472 6.5 12 6.5C14.4853 6.5 16.5 8.51472 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5ZM12 9C10.6193 9 9.5 10.1193 9.5 11.5C9.5 12.8807 10.6193 14 12 14C13.3807 14 14.5 12.8807 14.5 11.5C14.5 10.1193 13.3807 9 12 9Z" fill="currentColor"></path></svg>`;
+  readonly deleteIcon = `<svg width="1em" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
 
   protected productResource = inject(ProductResource);
 
@@ -125,31 +126,23 @@ export class ProductTable {
     this.productResource.remove(id).subscribe();
   }
 
-  categoryColorMap: Record<
-    ProductCategory,
-    'primary' | 'success' | 'warning' | 'info' | 'light' | 'dark' | 'error'
-  > = {
-    [ProductCategory.NORMAL_LAPTOP]: 'success',
-    [ProductCategory.GAMING_LAPTOP]: 'primary',
-    [ProductCategory.TABLET]: 'info',
-    [ProductCategory.NORMAL_DESKTOP_CPU]: 'light',
-    [ProductCategory.GAMING_CPU]: 'dark',
-    [ProductCategory.MONITORS]: 'warning',
-    [ProductCategory.UPS]: 'error',
-    [ProductCategory.IPG_PRODUCTS]: 'success',
-    [ProductCategory.ACCESSORIES]: 'primary',
-    [ProductCategory.CCTV_DVR_NVR]: 'warning',
-    [ProductCategory.CCTV_CAMERA]: 'dark',
-    [ProductCategory.SMPS]: 'info',
-    [ProductCategory.OTHERS]: 'light',
+  categoryInfoMap: Record<ProductCategory, { label: string; color: BadgeColor }> = {
+    [ProductCategory.NORMAL_LAPTOP]: { label: 'Normal Laptop', color: 'success' },
+    [ProductCategory.GAMING_LAPTOP]: { label: 'Gaming Laptop', color: 'primary' },
+    [ProductCategory.TABLET]: { label: 'Tablet', color: 'info' },
+    [ProductCategory.NORMAL_DESKTOP_CPU]: { label: 'Normal Desktop CPU', color: 'light' },
+    [ProductCategory.GAMING_CPU]: { label: 'Gaming CPU', color: 'dark' },
+    [ProductCategory.MONITORS]: { label: 'Monitors', color: 'warning' },
+    [ProductCategory.UPS]: { label: 'UPS', color: 'error' },
+    [ProductCategory.IPG_PRODUCTS]: { label: 'IPG Products', color: 'success' },
+    [ProductCategory.ACCESSORIES]: { label: 'Accessories', color: 'primary' },
+    [ProductCategory.CCTV_DVR_NVR]: { label: 'CCTV DVR/NVR', color: 'warning' },
+    [ProductCategory.CCTV_CAMERA]: { label: 'CCTV Camera', color: 'dark' },
+    [ProductCategory.SMPS]: { label: 'SMPS', color: 'info' },
+    [ProductCategory.OTHERS]: { label: 'Others', color: 'light' },
   };
 
-  getBadgeColor(category: string): BadgeColor {
-    const normalizedCategory = category
-      .toUpperCase()
-      .replace(' ', '_') as keyof typeof ProductCategory;
-    const categoryEnumValue = ProductCategory[normalizedCategory];
-
-    return this.categoryColorMap[categoryEnumValue] ?? 'light';
+  getBadgeColor(category: ProductCategory): BadgeColor {
+    return this.categoryInfoMap[category].color ?? 'light';
   }
 }

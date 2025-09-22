@@ -6,19 +6,19 @@ import { IProductForm } from './product-form';
 import { FormGroup } from '@angular/forms';
 
 export enum ProductCategory {
-  NORMAL_LAPTOP = 'normal_laptop',
-  GAMING_LAPTOP = 'gaming_laptop',
-  TABLET = 'tablet',
-  NORMAL_DESKTOP_CPU = 'normal_desktop_cpu',
-  GAMING_CPU = 'gaming_cpu',
-  MONITORS = 'monitors',
-  UPS = 'ups',
-  IPG_PRODUCTS = 'ipg_products',
-  ACCESSORIES = 'accessories',
-  CCTV_DVR_NVR = 'cctv_dvr_nvr',
-  CCTV_CAMERA = 'cctv_camera',
-  SMPS = 'smps',
-  OTHERS = 'others',
+  NORMAL_LAPTOP = 'NORMAL_LAPTOP',
+  GAMING_LAPTOP = 'GAMING_LAPTOP',
+  TABLET = 'TABLET',
+  NORMAL_DESKTOP_CPU = 'NORMAL_DESKTOP_CPU',
+  GAMING_CPU = 'GAMING_CPU',
+  MONITORS = 'MONITORS',
+  UPS = 'UPS',
+  IPG_PRODUCTS = 'IPG_PRODUCTS',
+  ACCESSORIES = 'ACCESSORIES',
+  CCTV_DVR_NVR = 'CCTV_DVR_NVR',
+  CCTV_CAMERA = 'CCTV_CAMERA',
+  SMPS = 'SMPS',
+  OTHERS = 'OTHERS',
 }
 
 type CreateProductInput = FormGroup<IProductForm>['value'];
