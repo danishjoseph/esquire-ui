@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { PageBreadcrumb } from '../shared/components/ui/page-breadcrumb';
 import { ProductTable } from './product-table';
 import { ProductResource } from './product-resource';
-import { FormControl } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
 import { Button } from '../shared/components/ui/button';
@@ -10,7 +10,7 @@ import { ProductForm } from './product-form';
 
 @Component({
   selector: 'app-product-list',
-  imports: [PageBreadcrumb, ProductTable, Button, ProductForm],
+  imports: [PageBreadcrumb, ProductTable, Button, ProductForm, ReactiveFormsModule],
   template: `
     <app-page-breadcrumb pageTitle="Products" />
     <div
@@ -39,6 +39,7 @@ import { ProductForm } from './product-form';
             <input
               type="text"
               placeholder="Search..."
+              [formControl]="search$"
               class="dark:bg-dark-900 h-[42px] w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-[42px] pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[300px]"
             />
           </div>
@@ -57,14 +58,18 @@ import { ProductForm } from './product-form';
 
       <div class="max-w-full overflow-x-auto">
         <div class="max-w-full overflow-x-auto">
-          @if (resource.hasValue()) {
-            <div class="overflow-y-auto max-h-[calc(100vh-150px)]">
+          @if (resource.hasValue() && resource.value().products.length) {
+            <div class="overflow-y-auto h-[70vh]">
               <app-product-table [data]="resource.value().products" />
               <span
                 appInfiniteScroll
                 (scrolled)="loadMore(resource.value().products.length)"
                 class="block h-6 w-full"
               ></span>
+            </div>
+          } @else {
+            <div class="h-[70vh] flex items-center justify-center text-gray-500 dark:text-gray-400">
+              No rows to display.
             </div>
           }
         </div>

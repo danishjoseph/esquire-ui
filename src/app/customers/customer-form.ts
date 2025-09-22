@@ -188,9 +188,12 @@ export class CustomerForm {
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     mobile: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(13)],
+      validators: [Validators.required, Validators.minLength(13), Validators.pattern('^[0-9]+$')],
     }),
-    alt_mobile: new FormControl(null),
+    alt_mobile: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.minLength(13), Validators.pattern('^[0-9]+$')],
+    }),
     email: new FormControl(null, [Validators.email]),
     address: new FormControl(null),
     house_office: new FormControl(null),

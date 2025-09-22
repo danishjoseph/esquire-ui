@@ -21,19 +21,19 @@ import { rxResource } from '@angular/core/rxjs-interop';
       />
       <div class="flex items-end justify-between mt-5">
         <div>
-          <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">Products</span>
           <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-            @if (customerInfo(); as customerInfo) {
-              {{ customerInfo.totalCustomers }}
+            @if (productInfo(); as productInfo) {
+              {{ productInfo.totalCustomers }}
               <span class="text-sm text-gray-400 dark:text-gray-400">
-                ( {{ customerInfo.currentMonthCustomers }} )
+                ( {{ productInfo.currentMonthCustomers }} )
               </span>
             } @else {
               {{ '-' }}
             }
           </h4>
         </div>
-        @if (cusomterKpi(); as kpi) {
+        @if (productKpi(); as kpi) {
           <app-badge [color]="kpi.color">
             <span [innerHTML]="kpi.icon | appSafeHtml"></span>
             {{ kpi.text }}
@@ -59,7 +59,7 @@ export class ProductMetrics {
     stream: () => this.dashboardResource.fetchProductMetrics(),
   });
 
-  readonly customerInfo = computed(() => {
+  readonly productInfo = computed(() => {
     if (this.resource.hasValue()) {
       const productInfo = this.resource.value()?.productMetrics;
       return {
@@ -70,7 +70,7 @@ export class ProductMetrics {
     return undefined;
   });
 
-  readonly cusomterKpi = computed(() => {
+  readonly productKpi = computed(() => {
     if (this.resource.hasValue()) {
       const kpi = this.resource.value()?.productMetrics;
       if (kpi === null || kpi === undefined) return null;
