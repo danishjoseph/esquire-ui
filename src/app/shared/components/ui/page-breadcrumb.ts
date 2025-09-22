@@ -1,8 +1,9 @@
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-page-breadcrumb',
-  imports: [],
+  imports: [RouterLink],
   template: `
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
