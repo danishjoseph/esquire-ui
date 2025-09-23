@@ -4,20 +4,20 @@ import { PageBreadcrumb } from '../shared/components/ui/page-breadcrumb';
 import { CustomerResource } from './customer-resource';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { InfiniteScroll } from '../shared/directives/infinite-scroll';
-import { CustomerForm } from './customer-form';
 import { Button } from '../shared/components/ui/button';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs';
+import { CustomerModal } from './customer-modal';
 
 @Component({
   selector: 'app-customer-list',
   imports: [
     CustomerTable,
     PageBreadcrumb,
-    CustomerForm,
     InfiniteScroll,
     Button,
     ReactiveFormsModule,
+    CustomerModal,
   ],
   template: `
     <app-page-breadcrumb pageTitle="Customers" />
@@ -62,7 +62,7 @@ import { debounceTime } from 'rxjs';
           </app-button>
         </form>
       </div>
-      <app-customer-form [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
+      <!-- <app-customer-form [isOpen]="isOpen()" (closed)="isOpen.set(false)" /> -->
 
       <div class="max-w-full overflow-x-auto">
         @if (resource.hasValue() && resource.value().customers.length) {
@@ -81,6 +81,7 @@ import { debounceTime } from 'rxjs';
         }
       </div>
     </div>
+    <app-customer-modal [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
   `,
 })
 export class CustomerList {

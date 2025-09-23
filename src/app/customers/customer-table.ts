@@ -2,7 +2,7 @@ import { Component, inject, input, model, signal } from '@angular/core';
 import { AvatarText } from '../shared/components/avatar/avatar-text';
 import { Button } from '../shared/components/ui/button';
 import { Customer, CustomerResource } from './customer-resource';
-import { CustomerForm } from './customer-form';
+import { CustomerModal } from './customer-modal';
 
 interface ICustomerTable {
   id: string;
@@ -44,7 +44,7 @@ function transformCustomerData(customers: Customer[]): ICustomerTable[] {
 
 @Component({
   selector: 'app-customer-table',
-  imports: [AvatarText, Button, CustomerForm],
+  imports: [AvatarText, Button, CustomerModal],
   template: `
     <table class="min-w-full">
       <thead
@@ -141,7 +141,7 @@ function transformCustomerData(customers: Customer[]): ICustomerTable[] {
         }
       </tbody>
     </table>
-    <app-customer-form [isOpen]="isOpen()" [customerId]="customerId()" (closed)="closeModal()" />
+    <app-customer-modal [customerId]="customerId()" [isOpen]="isOpen()" (closed)="closeModal()" />
   `,
 })
 export class CustomerTable {
