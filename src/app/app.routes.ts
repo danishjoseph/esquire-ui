@@ -2,9 +2,10 @@ import { Routes } from '@angular/router';
 import { Layout } from './shared/components/navigation/layout';
 import { CustomerList } from './customers/customer-list';
 import { NotFound } from './not-found';
-import { Maintenance } from './maintenance';
 import { ProductList } from './products/product-list';
 import { Dashboard } from './dashboard/dashboard';
+import { TicketAdd } from './workflow/tickets/ticket-add';
+import { TicketList } from './workflow/tickets/ticket-list';
 
 export const routes: Routes = [
   {
@@ -35,10 +36,21 @@ export const routes: Routes = [
         title: 'Products | Esquire',
       },
       {
-        path: 'tickets',
-        component: Maintenance,
-        pathMatch: 'full',
-        title: 'Tickets | Esquire',
+        path: 'service',
+        children: [
+          {
+            path: 'tickets',
+            component: TicketList,
+            pathMatch: 'full',
+            title: 'Tickets | Esquire',
+          },
+          {
+            path: 'add',
+            component: TicketAdd,
+            pathMatch: 'full',
+            title: 'Create Ticket | Esquire',
+          },
+        ],
       },
     ],
   },
