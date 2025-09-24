@@ -42,7 +42,11 @@ export interface Option {
       </option>
       <!-- Map over options -->
       @for (option of options(); track $index) {
-        <option [value]="option.value" class="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+        <option
+          [value]="option.value"
+          [selected]="option.value === this.value()"
+          class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+        >
           {{ option.label }}
         </option>
       }
