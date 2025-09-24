@@ -1,4 +1,4 @@
-import { Component, forwardRef, Input, input, model, signal } from '@angular/core';
+import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { Label } from './label';
 import { noop } from 'rxjs';
@@ -9,7 +9,7 @@ import { noop } from 'rxjs';
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => Input),
+      useExisting: forwardRef(() => TextArea),
       multi: true,
     },
   ],
@@ -24,7 +24,7 @@ import { noop } from 'rxjs';
         [value]="value()"
         (input)="onInput($event)"
         [disabled]="disabled()"
-        [class]="textareaClasses"
+        [class]="textareaClasses()"
         (blur)="onTouched()"
       ></textarea>
       @if (hint()) {
@@ -48,13 +48,14 @@ export class TextArea implements ControlValueAccessor {
   readonly placeholder = input('Enter your message');
   readonly success = input<boolean>(false);
   readonly error = input<boolean>(false);
-  readonly disabled = model<boolean>(false);
   readonly hint = input<string>();
   readonly className = input<string>('');
   readonly rows = input(3);
 
   #value = signal<string>('');
+  #disabled = signal(false);
   readonly value = this.#value.asReadonly();
+  readonly disabled = this.#disabled.asReadonly();
 
   protected onChange: (_: string) => void = noop;
   protected onTouched: () => void = noop;
@@ -65,9 +66,9 @@ export class TextArea implements ControlValueAccessor {
     this.onChange(val);
   }
 
-  get textareaClasses(): string {
+  textareaClasses = computed((): string => {
     let base = `w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden ${this.className()} `;
-    if (this.disabled()) {
+    if (this.#disabled()) {
       base +=
         'bg-gray-100 opacity-50 text-gray-500 border-gray-300 cursor-not-allowed opacity40 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
     } else if (this.error()) {
@@ -78,7 +79,7 @@ export class TextArea implements ControlValueAccessor {
         'bg-transparent text-gray-900 dark:text-gray-300 text-gray-900 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800';
     }
     return base;
-  }
+  });
 
   writeValue(value: string) {
     this.#value.set(value ?? '');
@@ -93,6 +94,6 @@ export class TextArea implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean) {
-    this.disabled.set(isDisabled);
+    this.#disabled.set(isDisabled);
   }
 }

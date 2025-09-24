@@ -1,4 +1,4 @@
-import { Component, computed, forwardRef, input, model, signal } from '@angular/core';
+import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { Label } from './label';
 import { noop } from 'rxjs';
@@ -51,12 +51,13 @@ export class Input implements ControlValueAccessor {
   readonly placeholder = input<string | undefined>('');
   readonly success = input<boolean>(false);
   readonly error = input<boolean>(false);
-  readonly disabled = model<boolean>(false);
   readonly hint = input<string>();
   readonly className = input<string>('');
 
   #value = signal<string>('');
+  #disabled = signal(false);
   readonly value = this.#value.asReadonly();
+  readonly disabled = this.#disabled.asReadonly();
 
   protected onChange: (_: string) => void = noop;
   protected onTouched: () => void = noop;
@@ -96,6 +97,6 @@ export class Input implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean) {
-    this.disabled.set(isDisabled);
+    this.#disabled.set(isDisabled);
   }
 }
