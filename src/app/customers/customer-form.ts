@@ -26,9 +26,9 @@ export interface ICustomerForm {
   template: `
     <form [formGroup]="form" (ngSubmit)="handleFormSubmit()" class="flex flex-col">
       <div class="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-        <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+        <h4 class="mb-5 text-base text-gray-800 dark:text-white/90 lg:mb-6">
           Personal Information
-        </h5>
+        </h4>
 
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div class="col-span-1">
@@ -90,9 +90,7 @@ export interface ICustomerForm {
           </div>
         </div>
 
-        <h5 class="my-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-          Address Information
-        </h5>
+        <h4 class="my-5 text-gray-800 dark:text-white/90 lg:mb-6">Address Information</h4>
 
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div class="col-span-1">

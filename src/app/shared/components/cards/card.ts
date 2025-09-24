@@ -11,7 +11,7 @@ import { Component, input } from '@angular/core';
     >
       <!-- Card Header -->
       <div class="px-6 py-5">
-        <h3 class="text-base font-medium text-gray-800 dark:text-white/90">
+        <h3 class="text-lg font-medium text-gray-800 dark:text-white/90">
           {{ title() }}
         </h3>
         @if (desc()) {
