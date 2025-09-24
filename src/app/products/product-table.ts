@@ -2,11 +2,12 @@ import { Component, inject, input, model, signal } from '@angular/core';
 import { Badge, BadgeColor } from '../shared/components/ui/badge';
 import { ProductCategory, ProductList, ProductResource } from './product-resource';
 import { Button } from '../shared/components/ui/button';
-import { productCategoryOptions, ProductForm } from './product-form';
+import { productCategoryOptions } from './product-form';
+import { ProductModal } from './product-modal';
 
 @Component({
   selector: 'app-product-table',
-  imports: [Badge, Button, ProductForm],
+  imports: [Badge, Button, ProductModal],
   template: `
     <table class="min-w-full">
       <thead
@@ -93,7 +94,7 @@ import { productCategoryOptions, ProductForm } from './product-form';
         }
       </tbody>
     </table>
-    <app-product-form [isOpen]="isOpen()" [productId]="productId()" (closed)="closeModal()" />
+    <app-product-modal [isOpen]="isOpen()" [productId]="productId()" (closed)="isOpen.set(false)" />
   `,
 })
 export class ProductTable {
