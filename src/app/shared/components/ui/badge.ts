@@ -24,12 +24,12 @@ export type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 
 export class Badge {
   readonly variant = input<BadgeVariant>('light');
   readonly size = input<BadgeSize>('md');
-  readonly color = input<BadgeColor>('primary');
+  readonly color = input<BadgeColor>();
   readonly startIcon = input<string>(''); // SVG or HTML string
   readonly endIcon = input<string>(''); // SVG or HTML string
 
   readonly baseStyles =
-    'inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium';
+    'inline-flex items-center whitespace-nowrap px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium';
 
   readonly sizeClass = computed(
     () =>
@@ -40,6 +40,7 @@ export class Badge {
   );
 
   readonly colorStyles = computed(() => {
+    const color = this.color() || this.getRandomColor();
     const variants = {
       light: {
         primary: 'bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400',
@@ -60,6 +61,20 @@ export class Badge {
         dark: 'bg-gray-700 text-white dark:text-white',
       },
     };
-    return variants[this.variant()][this.color()];
+    return variants[this.variant()][color];
   });
+
+  private getRandomColor(): BadgeColor {
+    const colors: BadgeColor[] = [
+      'primary',
+      'success',
+      'error',
+      'warning',
+      'info',
+      'light',
+      'dark',
+    ];
+    const randomIndex = Math.floor(Math.random() * colors.length);
+    return colors[randomIndex];
+  }
 }

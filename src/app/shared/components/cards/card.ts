@@ -10,15 +10,23 @@ import { Component, input } from '@angular/core';
       }}"
     >
       <!-- Card Header -->
-      <div class="px-6 py-5">
-        <h3 class="text-lg font-medium text-gray-800 dark:text-white/90">
-          {{ title() }}
-        </h3>
-        @if (desc()) {
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ desc() }}
-          </p>
-        }
+      <div class="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <!-- Title + description -->
+        <div class="min-w-0">
+          <h3 class="text-lg font-medium text-gray-800 dark:text-white/90 truncate">
+            {{ title() }}
+          </h3>
+          @if (desc()) {
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 truncate">
+              {{ desc() }}
+            </p>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-3 sm:mt-0 flex gap-2 flex-wrap">
+          <ng-content select="[card-actions]"></ng-content>
+        </div>
       </div>
 
       <!-- Card Body -->
