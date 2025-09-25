@@ -271,7 +271,7 @@ export class Sidebar {
       new: true,
       subItems: [
         { name: 'Tickets', path: 'service/tickets' },
-        { name: 'Add Ticket', path: 'service/add', new: true },
+        { name: 'Add Ticket', path: 'service/add' },
       ],
     },
   ];
