@@ -36,7 +36,7 @@ export enum TicketStatus {
     <app-worklog-statistics />
     <app-card title="Support Tickets">
       <div card-actions class="flex flex-wrap overflow-x-auto w-full">
-        <app-button-group [options]="buttonGroupOptions" [(selected)]="selectedTab" />
+        <app-tab-group [options]="buttonGroupOptions" [(selected)]="selectedTab" />
       </div>
       <div class="overflow-x-auto custom-scrollbar">
         <table class="w-full table-auto">

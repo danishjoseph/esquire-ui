@@ -3,18 +3,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { Input } from '../../shared/components/form/basic/input';
-import { Radio } from '../../shared/components/form/basic/radio';
 
-interface TicketMessage {
-  id: number;
-  userName: string;
-  userEmail: string;
-  userImage: string;
-  time: string;
-  content: string;
-  isSupport?: boolean;
-}
+// interface TicketMessage {
+//   id: number;
+//   userName: string;
+//   userEmail: string;
+//   userImage: string;
+//   time: string;
+//   content: string;
+//   isSupport?: boolean;
+// }
 
 export enum TicketStatus {
   IN_PROGRESS = 'IN_PROGRESS',
@@ -26,7 +24,7 @@ export enum TicketStatus {
 
 @Component({
   selector: 'app-ticket-reply',
-  imports: [FormsModule, Input, Radio],
+  imports: [FormsModule],
   template: `
     <!-- ticket-reply.component.html -->
     <div
@@ -240,7 +238,7 @@ export class TicketReply {
 
   protected route = inject(ActivatedRoute);
   readonly ticketNumber = toSignal(this.route.queryParams.pipe(map((params) => params['id'])), {
-    initialValue: "123",
+    initialValue: '123',
   });
 
   onReply() {
