@@ -6,11 +6,11 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
 import { Button } from '../shared/components/ui/button';
-import { ProductForm } from './product-form';
+import { ProductModal } from './product-modal';
 
 @Component({
   selector: 'app-product-list',
-  imports: [PageBreadcrumb, ProductTable, Button, ProductForm, ReactiveFormsModule],
+  imports: [PageBreadcrumb, ProductTable, Button, ReactiveFormsModule, ProductModal],
   template: `
     <app-page-breadcrumb pageTitle="Products" />
     <div
@@ -54,7 +54,7 @@ import { ProductForm } from './product-form';
           </app-button>
         </form>
       </div>
-      <app-product-form [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
+      <app-product-modal [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
 
       <div class="max-w-full overflow-x-auto">
         <div class="max-w-full overflow-x-auto">

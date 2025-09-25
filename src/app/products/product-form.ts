@@ -1,7 +1,6 @@
 import { afterRenderEffect, Component, inject, input, output } from '@angular/core';
 import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
-import { Modal } from '../shared/components/model/modal';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ProductCategory, ProductResource } from './product-resource';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -33,18 +32,10 @@ export const productCategoryOptions: Option[] = [
 
 @Component({
   selector: 'app-product-form',
-  imports: [Button, Modal, Input, ReactiveFormsModule, Select],
+  imports: [Button, Input, ReactiveFormsModule, Select],
   template: `
-    <app-modal
-      [isOpen]="isOpen()"
-      (closeEvent)="closeModal()"
-      className="max-w-[700px] p-5 lg:p-10"
-    >
-      <form
-        class="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11"
-        [formGroup]="form"
-        (ngSubmit)="this.productId() ? update() : save()"
-      >
+    <form [formGroup]="form" (ngSubmit)="handleFormSubmit()">
+      <div class="overflow-y-auto px-2 pb-3">
         <h4 class="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
           Product Information
         </h4>
@@ -97,19 +88,23 @@ export const productCategoryOptions: Option[] = [
           </div>
         </div>
 
-        <div class="flex items-center justify-end w-full gap-3 mt-6">
-          <app-button type="reset" size="sm" variant="outline" (btnClick)="closeModal()">
-            Close
-          </app-button>
-          <app-button type="submit" size="sm" [disabled]="form.invalid">
-            {{ this.productId() ? 'Update' : 'Add' }} Changes
-          </app-button>
-        </div>
-      </form>
-    </app-modal>
+        @if (!formGroup()) {
+          <div class="flex items-center justify-end w-full gap-3 mt-6">
+            <app-button type="reset" size="sm" variant="outline" (btnClick)="closeModal()">
+              Close
+            </app-button>
+            <app-button type="submit" size="sm" [disabled]="form.invalid">
+              {{ this.productId() ? 'Update' : 'Add' }} Changes
+            </app-button>
+          </div>
+        }
+      </div>
+    </form>
   `,
 })
 export class ProductForm {
+  readonly formGroup = input<FormGroup>();
+  readonly formSubmit = output();
   readonly productId = input('');
   readonly isOpen = input(false);
   readonly closed = output();
@@ -137,7 +132,6 @@ export class ProductForm {
 
   constructor() {
     afterRenderEffect(() => {
-      this.form.reset();
       if (this.resource.hasValue()) {
         const data = this.resource.value().product;
         this.form.patchValue(data);
@@ -148,6 +142,14 @@ export class ProductForm {
   closeModal() {
     this.form.reset();
     this.closed.emit();
+  }
+
+  handleFormSubmit() {
+    if (this.formGroup()) {
+      return this.formSubmit.emit();
+    } else {
+      return this.productId() ? this.update() : this.save();
+    }
   }
 
   save() {
