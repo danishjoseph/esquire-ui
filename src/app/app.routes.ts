@@ -7,11 +7,13 @@ import { Dashboard } from './dashboard/dashboard';
 import { TicketAdd } from './workflow/tickets/ticket-add';
 import { TicketList } from './workflow/tickets/ticket-list';
 import { TicketReply } from './workflow/tickets/ticket-reply';
+import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
 
 export const routes: Routes = [
   {
     path: '',
     component: Layout,
+    canActivate: [autoLoginPartialRoutesGuard],
     children: [
       {
         path: '',
