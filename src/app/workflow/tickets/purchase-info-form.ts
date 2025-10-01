@@ -1,22 +1,52 @@
 import { afterRenderEffect, Component, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Option, Select } from '../../shared/components/form/basic/select';
-import { CommonModule, JsonPipe } from '@angular/common';
 import { Input } from '../../shared/components/form/basic/input';
+import { Product } from '../../products/product-resource';
+import { Customer } from '../../customers/customer-resource';
 
-enum PurchaseStatus {
+export interface Purchase {
+  id: number;
+  purchase_status: PurchaseStatus;
+  warranty_status: WarrantyStatus;
+  purchase_date: Date;
+  invoice_number: string;
+  warranty_expiry: Date;
+  asc_start_date: Date;
+  asc_expiry_date: Date;
+  product: Product;
+  customer: Customer;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export enum ProductCondition {
+  EXCELLENT = 'EXCELLENT',
+  VERY_GOOD = 'VERY_GOOD',
+  GOOD = 'GOOD',
+  POOR = 'POOR',
+  VERY_POOR = 'VERY_POOR',
+  DAMAGED = 'DAMAGED',
+}
+
+export enum ServiceType {
+  INHOUSE = 'INHOUSE',
+  OUTDOOR = 'OUTDOOR',
+}
+
+export enum PurchaseStatus {
   ESQUIRE = 'ESQUIRE',
   NON_ESQUIRE = 'NON_ESQUIRE',
 }
 
-enum WarrantyStatus {
+export enum WarrantyStatus {
   UNDER_1YR = 'UNDER_1YR',
   WARRANTY_UPGRADE = 'WARRANTY_UPGRADE',
   ASC = 'ASC',
   NON_WARRANTY = 'NON_WARRANTY',
 }
 
-enum ServiceStatus {
+export enum ServiceStatus {
   CHARGEABLE = 'CHARGEABLE',
   WARRANTY_FREE = 'WARRANTY_FREE',
   FREE = 'FREE',

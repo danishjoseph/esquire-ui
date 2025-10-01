@@ -29,7 +29,7 @@ interface ListResponse {
   products: ProductList[];
 }
 
-interface Product {
+export interface Product {
   id: number;
   serial_number: string;
   category: ProductCategory;

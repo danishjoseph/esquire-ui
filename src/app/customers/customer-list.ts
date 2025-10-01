@@ -58,7 +58,7 @@ import { CustomerModal } from './customer-modal';
             (btnClick)="isOpen.set(true)"
             [startIcon]="addIcon"
           >
-            Add Customers
+            Add Customer
           </app-button>
         </form>
       </div>
