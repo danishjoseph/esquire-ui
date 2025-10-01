@@ -16,6 +16,10 @@ interface ProductMetricsResponse {
   productMetrics: GrowthMetrics;
 }
 
+interface ServiceMetricsResponse {
+  serviceMetrics: GrowthMetrics;
+}
+
 export const CUSTOMER_METRICS = gql<CustomerMetricsResponse, unknown>`
   query fetchCustomerMetrics {
     customerMetrics {
@@ -29,6 +33,16 @@ export const CUSTOMER_METRICS = gql<CustomerMetricsResponse, unknown>`
 export const PRODUCT_METRICS = gql<ProductMetricsResponse, unknown>`
   query fetchProductMetrics {
     productMetrics {
+      total
+      monthlyGrowth
+      currentMonthCount
+    }
+  }
+`;
+
+export const SERVICE_METRICS = gql<ServiceMetricsResponse, unknown>`
+  query fetchServiceMetrics {
+    serviceMetrics {
       total
       monthlyGrowth
       currentMonthCount
@@ -54,6 +68,14 @@ export class DashboardResource {
     return this.apollo
       .watchQuery({
         query: PRODUCT_METRICS,
+      })
+      .valueChanges.pipe(map((res) => res.data));
+  }
+
+  fetchServiceMetrics() {
+    return this.apollo
+      .watchQuery({
+        query: SERVICE_METRICS,
       })
       .valueChanges.pipe(map((res) => res.data));
   }

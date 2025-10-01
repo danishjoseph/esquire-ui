@@ -105,7 +105,7 @@ export class WorklogStatistics {
 
   readonly statistics = computed(() => {
     if (this.resource.hasValue()) {
-      return this.resource.value().serviceMetrics;
+      return this.resource.value().serviceStatusMetrics;
     }
     return undefined;
   });

@@ -8,7 +8,7 @@ interface ListResponse {
   services: TicketTable[];
 }
 
-interface ServiceMetrics {
+interface ServiceStatusMetrics {
   total: number;
   pending: number;
   solved: number;
@@ -107,9 +107,9 @@ const TICKETS = gql<ListResponse, TicketsRequest>`
   ${TICKET_TABLE}
 `;
 
-const METRICS = gql<{ serviceMetrics: ServiceMetrics }, unknown>`
-  query serviceMetrics {
-    serviceMetrics {
+const METRICS = gql<{ serviceStatusMetrics: ServiceStatusMetrics }, unknown>`
+  query serviceStatuaMetrics {
+    serviceStatusMetrics {
       total
       pending
       solved
