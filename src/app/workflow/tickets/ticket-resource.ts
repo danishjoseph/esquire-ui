@@ -8,6 +8,12 @@ interface ListResponse {
   services: TicketTable[];
 }
 
+interface ServiceMetrics {
+  total: number;
+  pending: number;
+  solved: number;
+}
+
 interface Accessory {
   id: number;
   accessory_name: string;
@@ -101,6 +107,16 @@ const TICKETS = gql<ListResponse, TicketsRequest>`
   ${TICKET_TABLE}
 `;
 
+const METRICS = gql<{ serviceMetrics: ServiceMetrics }, unknown>`
+  query serviceMetrics {
+    serviceMetrics {
+      total
+      pending
+      solved
+    }
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -117,5 +133,13 @@ export class TicketResource {
       fetchPolicy: 'cache-and-network',
     });
     return this.#ticketsRef?.valueChanges.pipe(map((res) => res.data));
+  }
+
+  metrics() {
+    return this.#apollo
+      .watchQuery({
+        query: METRICS,
+      })
+      .valueChanges.pipe(map((res) => res.data));
   }
 }

@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { TicketResource } from './ticket-resource';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-worklog-statistics',
@@ -28,7 +30,9 @@ import { Component } from '@angular/core';
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">5,347</h3>
+          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">
+            {{ statistics()?.total ?? '-' }}
+          </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">Total tickets</p>
         </div>
       </article>
@@ -55,7 +59,9 @@ import { Component } from '@angular/core';
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">1,230</h3>
+          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">
+            {{ statistics()?.pending ?? '-' }}
+          </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">Pending tickets</p>
         </div>
       </article>
@@ -82,11 +88,25 @@ import { Component } from '@angular/core';
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">4,117</h3>
+          <h3 class="text-title-xs mb-1 font-semibold text-gray-800 dark:text-white/90">
+            {{ statistics()?.solved ?? '-' }}
+          </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">Solved tickets</p>
         </div>
       </article>
     </div>
   `,
 })
-export class WorklogStatistics {}
+export class WorklogStatistics {
+  protected ticketResource = inject(TicketResource);
+  private resource = rxResource({
+    stream: () => this.ticketResource.metrics(),
+  });
+
+  readonly statistics = computed(() => {
+    if (this.resource.hasValue()) {
+      return this.resource.value().serviceMetrics;
+    }
+    return undefined;
+  });
+}
