@@ -54,7 +54,6 @@ import { ProductModal } from './product-modal';
           </app-button>
         </form>
       </div>
-      <app-product-modal [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
 
       <div class="max-w-full overflow-x-auto">
         <div class="max-w-full overflow-x-auto">
@@ -75,6 +74,7 @@ import { ProductModal } from './product-modal';
         </div>
       </div>
     </div>
+    <app-product-modal [isOpen]="isOpen()" (closed)="isOpen.set(false)" />
   `,
 })
 export class ProductList {

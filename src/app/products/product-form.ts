@@ -106,8 +106,6 @@ export class ProductForm {
   readonly formGroup = input<FormGroup>();
   readonly formSubmit = output();
   readonly productId = input('');
-  readonly isOpen = input(false);
-  readonly closed = output();
   protected productResource = inject(ProductResource);
   protected categoryOptions = productCategoryOptions;
 
@@ -141,7 +139,7 @@ export class ProductForm {
 
   closeModal() {
     this.form.reset();
-    this.closed.emit();
+    this.formSubmit.emit();
   }
 
   handleFormSubmit() {

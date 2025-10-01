@@ -94,7 +94,7 @@ import { ProductModal } from './product-modal';
         }
       </tbody>
     </table>
-    <app-product-modal [isOpen]="isOpen()" [productId]="productId()" (closed)="isOpen.set(false)" />
+    <app-product-modal [isOpen]="isOpen()" [productId]="productId()" (closed)="closeModal()" />
   `,
 })
 export class ProductTable {
