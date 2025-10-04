@@ -30,6 +30,7 @@ export interface Option {
       [value]="value()"
       (change)="onSelectChange($event)"
       (blur)="onTouched()"
+      [disabled]="disabled()"
     >
       <!-- Placeholder option -->
       <option

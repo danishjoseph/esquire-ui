@@ -1,9 +1,18 @@
-import { afterRenderEffect, Component, input, signal } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Option, Select } from '../../shared/components/form/basic/select';
 import { Input } from '../../shared/components/form/basic/input';
 import { Product } from '../../products/product-resource';
 import { Customer } from '../../customers/customer-resource';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface Purchase {
   id: number;
@@ -18,15 +27,6 @@ export interface Purchase {
   customer: Customer;
   created_at: Date;
   updated_at: Date;
-}
-
-export enum ProductCondition {
-  EXCELLENT = 'EXCELLENT',
-  VERY_GOOD = 'VERY_GOOD',
-  GOOD = 'GOOD',
-  POOR = 'POOR',
-  VERY_POOR = 'VERY_POOR',
-  DAMAGED = 'DAMAGED',
 }
 
 export enum ServiceType {
@@ -68,7 +68,7 @@ export interface IPurchaseInfo {
   selector: 'app-purchase-info-form',
   imports: [ReactiveFormsModule, Select, Input],
   template: `
-    <form [formGroup]="form" (ngSubmit)="handleFormSubmit()">
+    <form [formGroup]="form()" (ngSubmit)="handleFormSubmit()">
       <h4 class="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">
         Purchase Information
       </h4>
@@ -93,7 +93,7 @@ export interface IPurchaseInfo {
             [options]="warrantyOptions()"
           />
         </div>
-        @if (form.get('purchase_date')) {
+        @if (form().get('purchase_date')) {
           <div class="col-span-1">
             <app-input
               id="purchase_date"
@@ -104,7 +104,7 @@ export interface IPurchaseInfo {
             />
           </div>
         }
-        @if (form.get('invoice_number')) {
+        @if (form().get('invoice_number')) {
           <div class="col-span-1">
             <app-input
               id="invoice_number"
@@ -114,7 +114,7 @@ export interface IPurchaseInfo {
             />
           </div>
         }
-        @if (form.get('warranty_expiry')) {
+        @if (form().get('warranty_expiry')) {
           <div class="col-span-1">
             <app-input
               id="warranty_expiry"
@@ -125,7 +125,7 @@ export interface IPurchaseInfo {
             />
           </div>
         }
-        @if (form.get('asc_start_date')) {
+        @if (form().get('asc_start_date')) {
           <div class="col-span-1">
             <app-input
               id="asc_start_date"
@@ -136,7 +136,7 @@ export interface IPurchaseInfo {
             />
           </div>
         }
-        @if (form.get('asc_expiry_date')) {
+        @if (form().get('asc_expiry_date')) {
           <div class="col-span-1">
             <app-input
               id="asc_expiry_date"
@@ -148,7 +148,7 @@ export interface IPurchaseInfo {
           </div>
         }
 
-        @if (form.get('service_status')) {
+        @if (form().get('service_status')) {
           <div class="col-span-1">
             <app-select
               id="service_status"
@@ -159,7 +159,7 @@ export interface IPurchaseInfo {
             />
           </div>
         }
-        @if (form.get('invoice_number_retype')) {
+        @if (form().get('invoice_number_retype')) {
           <div class="col-span-2">
             <app-input
               id="service_status"
@@ -173,11 +173,14 @@ export interface IPurchaseInfo {
   `,
 })
 export class PurchaseInfoForm {
+  readonly formGroup = input<FormGroup<IPurchaseInfo>>();
+  readonly reset = input<boolean>();
   readonly productId = input('');
   readonly WARRANTY_STATUS = WarrantyStatus;
   readonly SERVICE_STATUS = ServiceStatus;
 
-  protected form = new FormGroup<IPurchaseInfo>({
+  protected destroyRef = inject(DestroyRef);
+  protected internalForm = new FormGroup<IPurchaseInfo>({
     purchase_status: new FormControl(PurchaseStatus.ESQUIRE, {
       nonNullable: true,
       validators: Validators.required,
@@ -186,6 +189,8 @@ export class PurchaseInfoForm {
       validators: Validators.required,
     }),
   });
+
+  protected form = computed<FormGroup<IPurchaseInfo>>(() => this.formGroup() ?? this.internalForm);
 
   readonly purchaseOptions: Option[] = [
     { value: PurchaseStatus.NON_ESQUIRE, label: 'Non Esquire' },
@@ -210,29 +215,34 @@ export class PurchaseInfoForm {
 
   constructor() {
     afterRenderEffect(() => {
-      this.form.controls.purchase_status.valueChanges.subscribe((purchaseStatus) => {
-        this.onStatusChange(purchaseStatus, this.form.controls.warranty_status.value);
-      });
+      this.form()
+        .controls.purchase_status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((purchaseStatus) => {
+          this.onStatusChange(purchaseStatus, this.form().controls.warranty_status.value);
+        });
 
-      this.form.controls.warranty_status.valueChanges.subscribe((warrantyStatus) => {
-        this.onStatusChange(this.form.controls.purchase_status.value, warrantyStatus);
-      });
+      this.form()
+        .controls.warranty_status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((warrantyStatus) => {
+          this.onStatusChange(this.form().controls.purchase_status.value, warrantyStatus);
+        });
 
-      this.form.controls.service_status?.valueChanges.subscribe((status) => {
-        console.log('Service Status Changed:', status);
-        this.updateInvoiceNumberRetype(status);
-      });
+      this.form()
+        .controls.service_status?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((status) => {
+          this.updateInvoiceNumberRetype(status);
+        });
     });
   }
 
   private updateInvoiceNumberRetype(status: ServiceStatus | null) {
-    const control = this.form.get('invoice_number_retype');
+    const control = this.form().get('invoice_number_retype');
     console.log('control', control);
 
     if (status === ServiceStatus.WARRANTY_FREE && !control) {
-      this.form.addControl('invoice_number_retype', new FormControl('', Validators.required));
+      this.form().addControl('invoice_number_retype', new FormControl('', Validators.required));
     } else if (status !== ServiceStatus.WARRANTY_FREE && control) {
-      this.form.removeControl('invoice_number_retype');
+      this.form().removeControl('invoice_number_retype');
     }
   }
 
@@ -244,23 +254,23 @@ export class PurchaseInfoForm {
     switch (warrantyStatus) {
       case WarrantyStatus.UNDER_1YR:
         if (purchaseStatus === PurchaseStatus.ESQUIRE) {
-          this.form.addControl('purchase_date', new FormControl(new Date()));
-          this.form.addControl('invoice_number', new FormControl(''));
-          this.form.setControl('service_status', new FormControl(ServiceStatus.FREE), {
+          this.form().addControl('purchase_date', new FormControl(new Date()));
+          this.form().addControl('invoice_number', new FormControl(''));
+          this.form().setControl('service_status', new FormControl(ServiceStatus.FREE), {
             emitEvent: true,
           });
         }
         break;
       case WarrantyStatus.WARRANTY_UPGRADE:
         if (purchaseStatus === PurchaseStatus.ESQUIRE) {
-          this.form.addControl('purchase_date', new FormControl(new Date()));
-          this.form.addControl('warranty_expiry', new FormControl(new Date()));
-          this.form.setControl('service_status', new FormControl(), { emitEvent: true });
+          this.form().addControl('purchase_date', new FormControl(new Date()));
+          this.form().addControl('warranty_expiry', new FormControl(new Date()));
+          this.form().setControl('service_status', new FormControl(), { emitEvent: true });
         }
         break;
       case WarrantyStatus.ASC:
-        this.form.addControl('asc_start_date', new FormControl(new Date()));
-        this.form.addControl('asc_expiry_date', new FormControl(new Date()));
+        this.form().addControl('asc_start_date', new FormControl(new Date()), { emitEvent: true });
+        this.form().addControl('asc_expiry_date', new FormControl(new Date()), { emitEvent: true });
         break;
       case WarrantyStatus.NON_WARRANTY:
         // Disable all inputs
@@ -272,11 +282,21 @@ export class PurchaseInfoForm {
   }
 
   private clearDynamicControls() {
-    if (this.form.get('purchase_date')) this.form.removeControl('purchase_date');
-    if (this.form.get('invoice_number')) this.form.removeControl('invoice_number');
-    if (this.form.get('warranty_expiry')) this.form.removeControl('warranty_expiry');
-    if (this.form.get('asc_start_date')) this.form.removeControl('asc_start_date');
-    if (this.form.get('asc_expiry_date')) this.form.removeControl('asc_expiry_date');
+    if (this.form().get('purchase_date')) {
+      this.form().removeControl('purchase_date');
+    }
+    if (this.form().get('invoice_number')) {
+      this.form().removeControl('invoice_number');
+    }
+    if (this.form().get('warranty_expiry')) {
+      this.form().removeControl('warranty_expiry');
+    }
+    if (this.form().get('asc_start_date')) {
+      this.form().removeControl('asc_start_date');
+    }
+    if (this.form().get('asc_expiry_date')) {
+      this.form().removeControl('asc_expiry_date');
+    }
   }
 
   private filterWarrantyOptions(purchaseStatus: PurchaseStatus) {
@@ -291,6 +311,6 @@ export class PurchaseInfoForm {
   }
 
   handleFormSubmit() {
-    console.log('form values', this.form.value, 'valid', this.form.valid);
+    console.log('form values', this.form().value, 'valid', this.form().valid);
   }
 }

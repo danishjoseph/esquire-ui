@@ -1,4 +1,12 @@
-import { afterRenderEffect, Component, inject, input, output } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -24,7 +32,7 @@ export interface ICustomerForm {
   selector: 'app-customer-form',
   imports: [Button, Input, ReactiveFormsModule, PhoneInput],
   template: `
-    <form [formGroup]="form" (ngSubmit)="handleFormSubmit()" class="flex flex-col">
+    <form [formGroup]="form()" (ngSubmit)="handleFormSubmit()" class="flex flex-col">
       <div class="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
         <h4 class="mb-5 text-base text-gray-800 dark:text-white/90 lg:mb-6">
           Personal Information
@@ -43,13 +51,13 @@ export interface ICustomerForm {
               formControlName="mobile"
               [error]="
                 !!(
-                  form.get('mobile')?.errors &&
-                  (form.get('mobile')?.touched || form.get('mobile')?.dirty)
+                  form().get('mobile')?.errors &&
+                  (form().get('mobile')?.touched || form().get('mobile')?.dirty)
                 )
               "
               [hint]="
-                form.get('mobile')?.hasError('pattern') &&
-                (form.get('mobile')?.touched || form.get('mobile')?.dirty)
+                form().get('mobile')?.hasError('pattern') &&
+                (form().get('mobile')?.touched || form().get('mobile')?.dirty)
                   ? 'This seems to be an invalid Number.'
                   : ''
               "
@@ -64,13 +72,13 @@ export interface ICustomerForm {
               formControlName="alt_mobile"
               [error]="
                 !!(
-                  form.get('alt_mobile')?.errors &&
-                  (form.get('alt_mobile')?.touched || form.get('alt_mobile')?.dirty)
+                  form().get('alt_mobile')?.errors &&
+                  (form().get('alt_mobile')?.touched || form().get('alt_mobile')?.dirty)
                 )
               "
               [hint]="
-                form.get('alt_mobile')?.hasError('pattern') &&
-                (form.get('alt_mobile')?.touched || form.get('alt_mobile')?.dirty)
+                form().get('alt_mobile')?.hasError('pattern') &&
+                (form().get('alt_mobile')?.touched || form().get('alt_mobile')?.dirty)
                   ? 'This seems to be an invalid Number.'
                   : ''
               "
@@ -84,8 +92,8 @@ export interface ICustomerForm {
               type="text"
               placeholder="Email"
               formControlName="email"
-              [error]="form.getError('email', 'email')"
-              [hint]="form.getError('email', 'email') ? 'This is an invalid email address.' : ''"
+              [error]="form().getError('email', 'email')"
+              [hint]="form().getError('email', 'email') ? 'This is an invalid email address.' : ''"
             />
           </div>
         </div>
@@ -153,7 +161,7 @@ export interface ICustomerForm {
             <app-button type="reset" size="sm" variant="outline" (btnClick)="closeModal()">
               Close
             </app-button>
-            <app-button type="submit" size="sm" [disabled]="form.invalid">
+            <app-button type="submit" size="sm" [disabled]="form().invalid">
               {{ this.customerId() ? 'Update' : 'Add' }} Changes
             </app-button>
           </div>
@@ -163,12 +171,14 @@ export interface ICustomerForm {
   `,
 })
 export class CustomerForm {
-  readonly formGroup = input<FormGroup>();
+  readonly formGroup = input<FormGroup<ICustomerForm>>();
+  readonly reset = input<boolean>();
   readonly formSubmit = output();
   readonly customerId = input('');
   protected customerResource = inject(CustomerResource);
+  protected destroyRef = inject(DestroyRef);
 
-  protected form = new FormGroup<ICustomerForm>({
+  protected internalForm = new FormGroup<ICustomerForm>({
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     mobile: new FormControl('', {
       nonNullable: true,
@@ -196,6 +206,8 @@ export class CustomerForm {
     district: new FormControl(null),
   });
 
+  protected form = computed<FormGroup<ICustomerForm>>(() => this.formGroup() ?? this.internalForm);
+
   protected resource = rxResource({
     params: () => this.customerId(),
     stream: ({ params }) => (params ? this.customerResource.customer(params) : EMPTY),
@@ -205,34 +217,30 @@ export class CustomerForm {
     afterRenderEffect(() => {
       if (this.resource.hasValue()) {
         const data = this.resource.value().customer;
-        this.form.patchValue(data);
+        this.form().patchValue(data);
       }
     });
   }
 
   closeModal() {
-    this.form.reset();
+    this.form().reset();
     this.formSubmit.emit();
   }
 
   handleFormSubmit() {
-    if (this.formGroup()) {
-      return this.formSubmit.emit();
-    } else {
-      return this.customerId() ? this.update() : this.save();
-    }
+    return this.customerId() ? this.update() : this.save();
   }
 
   save() {
-    console.log('cust', this.form.value);
-    this.customerResource.create(this.form.value).subscribe({
+    console.log('cust', this.form().value);
+    this.customerResource.create(this.form().value).subscribe({
       complete: () => this.closeModal(),
     });
   }
 
   update() {
     const customerData = {
-      ...this.form.value,
+      ...this.form().value,
       id: +this.customerId(),
     };
 

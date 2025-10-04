@@ -1,11 +1,59 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { TicketStatus } from './ticket-list';
 import { Apollo, gql, QueryRef } from 'apollo-angular';
 import { map } from 'rxjs';
-import { ProductCondition, Purchase, ServiceStatus, ServiceType } from './purchase-info-form';
+import {
+  Purchase,
+  PurchaseStatus,
+  ServiceStatus,
+  ServiceType,
+  WarrantyStatus,
+} from './purchase-info-form';
+import { FormGroup } from '@angular/forms';
+import { IProductForm } from '../../products/product-form';
+import { ICustomerForm } from '../../customers/customer-form';
+import { IAccessory, IWorkLog, LogType, ProductCondition } from './worklog-form';
+import { ProductCategory } from '../../products/product-resource';
+
+export enum TicketStatus {
+  IN_PROGRESS = 'IN_PROGRESS',
+  QC = 'QC',
+  DELIVERY_READY = 'DELIVERY_READY',
+  DELIVERED = 'DELIVERED',
+  CLOSED = 'CLOSED',
+}
 
 interface ListResponse {
   services: TicketTable[];
+}
+
+type TicketResponse = CreateServiceInput;
+
+export interface CreateServiceInput {
+  status: TicketStatus;
+  service_type: ServiceType;
+  service_status?: ServiceStatus;
+  quotation_amount: number;
+  service_charge: number;
+  gst_amount: number;
+  total_amount: number;
+  advance_amount: number;
+  product_condition: ProductCondition;
+  accessories: IAccessory[];
+  purchase?: {
+    purchase_status: PurchaseStatus | null;
+    warranty_status: WarrantyStatus | null;
+    purchase_date: Date | null;
+    invoice_number: string | null;
+    warranty_expiry: Date | null;
+    asc_start_date: Date | null;
+    asc_expiry_date: Date | null;
+    product?: FormGroup<IProductForm>['value'];
+    product_id?: string;
+    customer?: FormGroup<ICustomerForm>['value'];
+    customer_id?: string;
+  };
+  purchase_id?: string;
+  service_logs: IWorkLog[];
 }
 
 interface ServiceStatusMetrics {
@@ -37,7 +85,7 @@ enum ServiceSectionName {
   HOLD = 'HOLD',
 }
 
-export interface Ticket {
+interface Ticket {
   id: number;
   accessories: Accessory[];
   purchase: Purchase[];
@@ -54,6 +102,58 @@ export interface Ticket {
   product_condition: ProductCondition;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface TicketView {
+  id: string;
+  accessories: [
+    {
+      accessory_name: string;
+      accessory_received: boolean;
+    },
+  ];
+  purchase: {
+    product: {
+      name: string;
+      serial_number: string;
+      category: ProductCategory;
+      brand: string;
+      model_name: string;
+    };
+    customer: {
+      name: string;
+      mobile: string;
+      alt_mobile: string | null;
+      email: string | null;
+      address: string | null;
+      house_office: string | null;
+      street_building: string | null;
+      area: string | null;
+      pincode: string | null;
+      district: string | null;
+    };
+    purchase_status: PurchaseStatus;
+    warranty_status: WarrantyStatus;
+    purchase_date: Date | null;
+    invoice_number: string | null;
+    warranty_expiry: Date | null;
+    asc_start_date: Date | null;
+    asc_expiry_date: Date | null;
+  };
+  product_condition: ProductCondition;
+  quotation_amount: number;
+  service_charge: number;
+  gst_amount: number;
+  total_amount: number;
+  advance_amount: number;
+  service_status: ServiceStatus | null;
+  status: TicketStatus;
+  service_logs: [
+    {
+      service_log_type: LogType;
+      log_description: string;
+    },
+  ];
 }
 
 interface TicketsRequest {
@@ -75,6 +175,57 @@ export interface TicketTable {
   assignedExecutive: null;
   status: TicketStatus;
 }
+
+const TICKET = gql`
+  fragment Ticket on Service {
+    id
+    caseId: case_id
+    accessories {
+      accessory_name
+      accessory_received
+    }
+    purchase {
+      product {
+        name
+        serial_number
+        category
+        brand
+        model_name
+      }
+      customer {
+        name
+        mobile
+        alt_mobile
+        email
+        address
+        house_office
+        street_building
+        area
+        pincode
+        district
+      }
+      purchase_status
+      warranty_status
+      purchase_date
+      invoice_number
+      asc_start_date
+      asc_expiry_date
+    }
+    service_status
+    product_condition
+    quotation_amount
+    service_charge
+    gst_amount
+    total_amount
+    advance_amount
+    service_status
+    status
+    service_logs {
+      service_log_type
+      log_description
+    }
+  }
+`;
 
 const TICKET_TABLE = gql`
   fragment TicketTable on Service {
@@ -107,6 +258,16 @@ const TICKETS = gql<ListResponse, TicketsRequest>`
   ${TICKET_TABLE}
 `;
 
+const CREATE = gql<TicketResponse, unknown>`
+  mutation CreateService($createServiceInput: CreateServiceInput!) {
+    createService(createServiceInput: $createServiceInput) {
+      id
+      status
+      case_id
+    }
+  }
+`;
+
 const METRICS = gql<{ serviceStatusMetrics: ServiceStatusMetrics }, unknown>`
   query serviceStatuaMetrics {
     serviceStatusMetrics {
@@ -115,6 +276,15 @@ const METRICS = gql<{ serviceStatusMetrics: ServiceStatusMetrics }, unknown>`
       solved
     }
   }
+`;
+
+const GET = gql<{ service: TicketView }, number>`
+  query Service($id: Int!) {
+    service(id: $id) {
+      ...Ticket
+    }
+  }
+  ${TICKET}
 `;
 
 @Injectable({
@@ -139,6 +309,25 @@ export class TicketResource {
     return this.#apollo
       .watchQuery({
         query: METRICS,
+      })
+      .valueChanges.pipe(map((res) => res.data));
+  }
+
+  create(createServiceInput: CreateServiceInput) {
+    return this.#apollo
+      .mutate({
+        mutation: CREATE,
+        variables: { createServiceInput },
+        refetchQueries: [{ query: TICKETS, variables: { ...this.#ticketsRequestState() } }],
+      })
+      .pipe(map((res) => res.data));
+  }
+
+  ticket(id: string) {
+    return this.#apollo
+      .watchQuery({
+        query: GET,
+        variables: { id: +id },
       })
       .valueChanges.pipe(map((res) => res.data));
   }

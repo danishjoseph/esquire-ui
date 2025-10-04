@@ -1,4 +1,4 @@
-import { Component, computed, inject, model } from '@angular/core';
+import { Component, computed, inject, model, signal } from '@angular/core';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { Dropdown } from '../../shared/components/ui/dropdown';
 import { PageBreadcrumb } from '../../shared/components/ui/page-breadcrumb';
@@ -8,18 +8,11 @@ import { TabGroup } from '../../shared/components/ui/tab-group';
 import { WorklogStatistics } from './worklog-statistics';
 import { Card } from '../../shared/components/cards/card';
 import { Router } from '@angular/router';
-import { TicketResource, TicketTable } from './ticket-resource';
+import { TicketResource, TicketStatus, TicketTable } from './ticket-resource';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { debounceTime } from 'rxjs';
-
-export enum TicketStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  QC = 'QC',
-  DELIVERY_READY = 'DELIVERY_READY',
-  DELIVERED = 'DELIVERED',
-  CLOSED = 'CLOSED',
-}
+import { TicketModal } from './ticket-modal';
 
 @Component({
   selector: 'app-ticket-list',
@@ -32,6 +25,7 @@ export enum TicketStatus {
     WorklogStatistics,
     Card,
     DatePipe,
+    TicketModal,
   ],
   template: `
     <app-page-breadcrumb pageTitle="Support Tickets" />
@@ -175,9 +169,12 @@ export enum TicketStatus {
         }
       </div>
     </app-card>
+    <app-ticket-modal [ticketId]="ticketId()" [isOpen]="isOpen()" (closed)="closeModal()" />
   `,
 })
 export class TicketList {
+  protected ticketId = model('');
+  protected isOpen = signal(false);
   protected router = inject(Router);
   protected ticketResource = inject(TicketResource);
   readonly selectedTab = model(TicketStatus.IN_PROGRESS);
@@ -202,9 +199,19 @@ export class TicketList {
     return [];
   });
 
+  openModal(id: string) {
+    console.log('id', id);
+    this.ticketId.set(id);
+    this.isOpen.set(true);
+  }
+
+  closeModal() {
+    this.ticketId.set('');
+    this.isOpen.set(false);
+  }
+
   handleViewMore(item: TicketTable) {
-    // logic here
-    console.log('View More:', item);
+    this.openModal(item.id.toString());
   }
 
   handleUpdate(item: TicketTable) {
