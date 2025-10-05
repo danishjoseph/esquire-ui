@@ -168,11 +168,6 @@ export class TicketForm {
     }),
   });
 
-  // protected worklogForm = this.fb.group<IWorkLogForm>({
-  //   product_condition: new FormControl(ProductCondition.GOOD, { nonNullable: true }),
-  //   work_logs: this.fb.array<FormGroup<IWorkLog>>([]),
-  //   accessories: this.fb.array<FormGroup<IAccessory>>([]),
-  // });
   protected worklogForm = new FormGroup<IWorkLogForm>({
     product_condition: new FormControl(ProductCondition.GOOD, { nonNullable: true }),
     work_logs: new FormArray<FormGroup<IWorkLog>>([]),
@@ -198,7 +193,7 @@ export class TicketForm {
   openTicket() {
     const request = this.toCreateRequest(this.form.value);
     this.ticketResource.create(request).subscribe({
-      complete: () => console.log('saved'),
+      complete: () => this.form.reset(),
     });
   }
 

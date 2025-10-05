@@ -156,6 +156,25 @@ export interface TicketView {
   ];
 }
 
+interface ServiceLogs {
+  id: string;
+  case_id: string;
+  accessories: [
+    {
+      accessory_name: string;
+      accessory_received: boolean;
+    },
+  ];
+  service_logs: [
+    {
+      service_log_type: LogType;
+      log_description: string;
+    },
+  ];
+  status: TicketStatus;
+  created_at: Date;
+}
+
 interface TicketsRequest {
   offset: number;
   limit: number;
@@ -287,6 +306,29 @@ const GET = gql<{ service: TicketView }, number>`
   ${TICKET}
 `;
 
+const GET_LOGS = gql<{ service: ServiceLogs }, number>`
+  query Service($id: Int!) {
+    service(id: $id) {
+      id
+      case_id
+      accessories {
+        accessory_name
+        accessory_received
+      }
+      serviceSection: service_section {
+        id
+        name: service_section_name
+      }
+      service_logs {
+        service_log_type
+        log_description
+      }
+      status
+      created_at
+    }
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -327,6 +369,15 @@ export class TicketResource {
     return this.#apollo
       .watchQuery({
         query: GET,
+        variables: { id: +id },
+      })
+      .valueChanges.pipe(map((res) => res.data));
+  }
+
+  serviceLogs(id: string) {
+    return this.#apollo
+      .watchQuery({
+        query: GET_LOGS,
         variables: { id: +id },
       })
       .valueChanges.pipe(map((res) => res.data));

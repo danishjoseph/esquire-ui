@@ -215,9 +215,7 @@ export class TicketList {
   }
 
   handleUpdate(item: TicketTable) {
-    // logic here
-    console.log('Delete:', item);
-    this.router.navigate(['/service/reply', '123']);
+    this.router.navigate(['/service/reply', item.id]);
   }
 
   protected buttonGroupOptions: KeyValue<string, string>[] = [

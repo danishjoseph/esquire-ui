@@ -1,8 +1,21 @@
-import { Component, inject, input, model, output, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  output,
+  signal,
+} from '@angular/core';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { EMPTY, map, tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { TicketResource } from './ticket-resource';
+import { DatePipe } from '@angular/common';
+import { AvatarText } from '../../shared/components/avatar/avatar-text';
 
 // interface TicketMessage {
 //   id: number;
@@ -24,7 +37,7 @@ export enum TicketStatus {
 
 @Component({
   selector: 'app-ticket-reply',
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe, AvatarText],
   template: `
     <!-- ticket-reply.component.html -->
     <div
@@ -36,9 +49,11 @@ export enum TicketStatus {
       >
         <div>
           <h3 class="text-lg font-medium text-gray-800 dark:text-white/90">
-            Ticket #{{ ticketNumber() }} - {{ ticketTitle() }}
+            Ticket #{{ serviceLogs()?.case_id }}
           </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">{{ ticketTime() }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ serviceLogs()?.created_at | date: 'short' }}
+          </p>
         </div>
         <div class="flex items-center gap-4">
           <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -96,20 +111,22 @@ export enum TicketStatus {
         <div
           class="custom-scrollbar h-[calc(58vh-162px)] space-y-7 divide-y divide-gray-200 overflow-y-auto pr-2 dark:divide-gray-800"
         >
-          @for (message of messages(); track message.id) {
+          @for (message of messages(); track $index) {
             <article>
               <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                  <img [src]="message.userImage" alt="" class="h-10 w-10 shrink-0 rounded-full" />
+                  <app-avatar-text [name]="message.userName" class="w-10 h-10" />
                   <div>
                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">
                       {{ message.userName }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ message.userEmail }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ message.role }}</p>
                   </div>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ message.time }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ message.time | date: 'short' }}
+                  </p>
                 </div>
               </div>
               <div class="pb-6">
@@ -223,13 +240,12 @@ export class TicketReply {
       content: `Thanks, Musharof! I’ll give it a try and update you if I face any issues.`,
     },
   ];
-  readonly messages = signal(this.ticketMessages);
 
-  readonly ticketTitle = input<string>('Destkop System not loggin in');
-  readonly ticketTime = input<string>('Mon, 3:20 PM (2 days ago)');
   readonly currentPage = input<number>(1);
   readonly totalPages = input<number>(1);
   readonly selected = model<TicketStatus>(TicketStatus.IN_PROGRESS);
+
+  protected ticketResource = inject(TicketResource);
 
   reply = output<string>();
   statusChange = output<TicketStatus>();
@@ -237,9 +253,40 @@ export class TicketReply {
   replyMessage = '';
 
   protected route = inject(ActivatedRoute);
-  readonly ticketNumber = toSignal(this.route.queryParams.pipe(map((params) => params['id'])), {
-    initialValue: '123',
+  readonly ticketId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), {
+    initialValue: null,
   });
+
+  protected resource = rxResource({
+    params: () => this.ticketId(),
+    stream: ({ params }) => (params ? this.ticketResource.serviceLogs(params) : EMPTY),
+  });
+
+  protected serviceLogs = computed(() => {
+    if (this.resource.hasValue()) {
+      return this.resource.value().service;
+    }
+    return undefined;
+  });
+
+  protected messages = computed(() => [
+    ...(this.serviceLogs()?.accessories || []).map((item) => ({
+      ...item,
+      userName: 'Test User1',
+      role: 'FOE',
+      time: new Date().toISOString(),
+      content: `Accessories Attached: ${item.accessory_name}`,
+    })),
+    ...(this.serviceLogs()?.service_logs || []).map((item) => ({
+      ...item,
+      userName: 'Test User2',
+      role: 'Executive',
+      time: new Date().toISOString(),
+      content: `Service Log:<br>
+              Type: ${item.service_log_type}<br>
+              Description: ${item.log_description}`, // Creating combined content for service_logs
+    })),
+  ]);
 
   onReply() {
     if (this.replyMessage.trim()) {
