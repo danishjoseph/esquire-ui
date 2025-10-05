@@ -54,7 +54,7 @@ export const routes: Routes = [
             title: 'Create Ticket | Esquire',
           },
           {
-            path: 'reply/:id?',
+            path: 'reply/:id',
             component: TicketReply,
             pathMatch: 'full',
             title: 'Feedback Log | Esquire',
