@@ -7,31 +7,10 @@ import {
   input,
   output,
 } from '@angular/core';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Input } from '../../shared/components/form/basic/input';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-export interface IServiceCharge {
-  quotation_amount: FormControl<string | null>;
-  service_charge: FormControl<string | null>;
-  advance_amount: FormControl<string | null>;
-  total_amount: FormControl<string | null>;
-  gst_amount: FormControl<string | null>;
-}
-
-export const numberValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-  const value = control.value;
-  // Check if the value is a number and that it is >= 0
-  return !isNaN(value) && parseFloat(value) >= 0 ? null : { notNumber: true };
-};
+import { TicketFormService, IServiceCharge } from './ticket-form-service';
 
 @Component({
   selector: 'app-service-charge-form',
@@ -57,21 +36,23 @@ export const numberValidator: ValidatorFn = (control: AbstractControl): Validati
           />
         </div>
 
-        <div class="col-span-1">
-          <app-input
-            type="tel"
-            id="service_charge"
-            label="Service Charge"
-            placeholder="Service Charges"
-            formControlName="service_charge"
-            [error]="
-              !!(
-                form().get('service_charge')?.errors &&
-                (form().get('service_charge')?.touched || form().get('service_charge')?.dirty)
-              )
-            "
-          />
-        </div>
+        @if (ticketId()) {
+          <div class="col-span-1">
+            <app-input
+              type="tel"
+              id="service_charge"
+              label="Service Charge"
+              placeholder="Service Charges"
+              formControlName="service_charge"
+              [error]="
+                !!(
+                  form().get('service_charge')?.errors &&
+                  (form().get('service_charge')?.touched || form().get('service_charge')?.dirty)
+                )
+              "
+            />
+          </div>
+        }
 
         <div class="col-span-1">
           <app-input
@@ -100,12 +81,7 @@ export const numberValidator: ValidatorFn = (control: AbstractControl): Validati
         </div>
 
         <div class="col-span-1">
-          <app-input
-            id="gst_amount"
-            label="GST Charges (18%)"
-            formControlName="gst_amount"
-            [disabled]="true"
-          />
+          <app-input id="gst_amount" label="GST Charges (18%)" formControlName="gst_amount" />
         </div>
       </div>
     </form>
@@ -113,28 +89,23 @@ export const numberValidator: ValidatorFn = (control: AbstractControl): Validati
 })
 export class ServiceChargeForm {
   readonly formGroup = input<FormGroup<IServiceCharge>>();
-  readonly reset = input<boolean>();
   readonly formSubmit = output();
-  readonly productId = input('');
+  readonly ticketId = input('');
   public effectiveAmount = 0;
   public gstAmount = 0;
   public totalAmount = 0;
 
-  protected internalForm = new FormGroup<IServiceCharge>({
-    quotation_amount: new FormControl('', [Validators.required, numberValidator]),
-    service_charge: new FormControl('', [Validators.required, numberValidator]),
-    advance_amount: new FormControl('', [Validators.required, numberValidator]),
-    total_amount: new FormControl({ value: '0', disabled: true }, [numberValidator]),
-    gst_amount: new FormControl({ value: '0', disabled: true }, [numberValidator]),
-  });
+  protected ticketFormService = inject(TicketFormService);
 
   handleFormSubmit() {
-    console.log('form values', this.internalForm.value, 'valid', this.internalForm.valid);
+    console.log('form values', this.form().value, 'valid', this.form().valid);
   }
 
   protected destroyRef = inject(DestroyRef);
 
-  protected form = computed<FormGroup<IServiceCharge>>(() => this.formGroup() ?? this.internalForm);
+  protected form = computed<FormGroup<IServiceCharge>>(
+    () => this.formGroup() ?? this.ticketFormService.serviceChargeForm,
+  );
 
   constructor() {
     afterRenderEffect(() => {

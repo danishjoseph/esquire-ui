@@ -9,24 +9,12 @@ import {
 } from '@angular/core';
 import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CustomerResource } from './customer-resource';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
 import { PhoneInput } from '../shared/components/form/phone-input';
-
-export interface ICustomerForm {
-  name: NonNullable<FormControl<string>>;
-  mobile: NonNullable<FormControl<string>>;
-  alt_mobile: FormControl<string | null>;
-  email: FormControl<string | null>;
-  address: FormControl<string | null>;
-  house_office: FormControl<string | null>;
-  street_building: FormControl<string | null>;
-  area: FormControl<string | null>;
-  pincode: FormControl<string | null>;
-  district: FormControl<string | null>;
-}
+import { CustomerFormService, ICustomerForm } from './customer-form-service';
 
 @Component({
   selector: 'app-customer-form',
@@ -177,36 +165,11 @@ export class CustomerForm {
   readonly customerId = input('');
   protected customerResource = inject(CustomerResource);
   protected destroyRef = inject(DestroyRef);
+  protected customerFormService = inject(CustomerFormService);
 
-  protected internalForm = new FormGroup<ICustomerForm>({
-    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    mobile: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.pattern('^[+]?[0-9]+$'), // Validates optional + and digits
-        Validators.minLength(13),
-        Validators.maxLength(13),
-      ],
-    }),
-    alt_mobile: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.pattern('^[+]?[0-9]+$'), // Validates optional + and digits
-        Validators.minLength(13),
-        Validators.maxLength(13),
-      ],
-    }),
-    email: new FormControl(null, [Validators.email]),
-    address: new FormControl(null),
-    house_office: new FormControl(null),
-    street_building: new FormControl(null),
-    area: new FormControl(null),
-    pincode: new FormControl(null),
-    district: new FormControl(null),
-  });
-
-  protected form = computed<FormGroup<ICustomerForm>>(() => this.formGroup() ?? this.internalForm);
+  protected form = computed<FormGroup<ICustomerForm>>(
+    () => this.formGroup() ?? this.customerFormService.customerForm,
+  );
 
   protected resource = rxResource({
     params: () => this.customerId(),
@@ -232,7 +195,6 @@ export class CustomerForm {
   }
 
   save() {
-    console.log('cust', this.form().value);
     this.customerResource.create(this.form().value).subscribe({
       complete: () => this.closeModal(),
     });

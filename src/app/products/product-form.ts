@@ -9,19 +9,13 @@ import {
 } from '@angular/core';
 import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ProductCategory, ProductResource } from './product-resource';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
 import { Option, Select } from '../shared/components/form/basic/select';
+import { IProductForm, ProductFormService } from './product-form-service';
 
-export interface IProductForm {
-  name: NonNullable<FormControl<string>>;
-  serial_number: NonNullable<FormControl<string>>;
-  category: NonNullable<FormControl<ProductCategory>>;
-  brand: NonNullable<FormControl<string>>;
-  model_name: FormControl<string>;
-}
 export const productCategoryOptions: Option[] = [
   { value: ProductCategory.NORMAL_LAPTOP, label: 'Normal Laptop' },
   { value: ProductCategory.GAMING_LAPTOP, label: 'Gaming Laptop' },
@@ -116,23 +110,12 @@ export class ProductForm {
   readonly productId = input('');
   protected productResource = inject(ProductResource);
   protected destroyRef = inject(DestroyRef);
+  protected productFormService = inject(ProductFormService);
   protected categoryOptions = productCategoryOptions;
 
-  protected internalForm = new FormGroup<IProductForm>({
-    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    serial_number: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    category: new FormControl(ProductCategory.NORMAL_LAPTOP, {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    brand: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    model_name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-  });
-
-  protected form = computed<FormGroup<IProductForm>>(() => this.formGroup() ?? this.internalForm);
+  protected form = computed<FormGroup<IProductForm>>(
+    () => this.formGroup() ?? this.productFormService.productForm,
+  );
 
   protected resource = rxResource({
     params: () => this.productId(),
@@ -177,20 +160,4 @@ export class ProductForm {
         complete: () => this.closeModal(),
       });
   }
-
-  readonly productCategoryOptions: Option[] = [
-    { value: ProductCategory.NORMAL_LAPTOP, label: 'Normal Laptop' },
-    { value: ProductCategory.GAMING_LAPTOP, label: 'Gaming Laptop' },
-    { value: ProductCategory.TABLET, label: 'Tablet' },
-    { value: ProductCategory.NORMAL_DESKTOP_CPU, label: 'Normal Desktop CPU' },
-    { value: ProductCategory.GAMING_CPU, label: 'Gaming CPU' },
-    { value: ProductCategory.MONITORS, label: 'Monitors' },
-    { value: ProductCategory.UPS, label: 'UPS' },
-    { value: ProductCategory.IPG_PRODUCTS, label: 'IPG Products' },
-    { value: ProductCategory.ACCESSORIES, label: 'Accessories' },
-    { value: ProductCategory.CCTV_DVR_NVR, label: 'CCTV DVR/NVR' },
-    { value: ProductCategory.CCTV_CAMERA, label: 'CCTV Camera' },
-    { value: ProductCategory.SMPS, label: 'SMPS' },
-    { value: ProductCategory.OTHERS, label: 'Others' },
-  ];
 }

@@ -9,10 +9,10 @@ import {
   WarrantyStatus,
 } from './purchase-info-form';
 import { FormGroup } from '@angular/forms';
-import { IProductForm } from '../../products/product-form';
-import { ICustomerForm } from '../../customers/customer-form';
-import { IAccessory, IWorkLog, LogType, ProductCondition } from './worklog-form';
+import { ICustomerForm } from '../../customers/customer-form-service';
+import { IAccessory, IWorkLog, LogType, ProductCondition } from './ticket-form-service';
 import { ProductCategory } from '../../products/product-resource';
+import { IProductForm } from '../../products/product-form-service';
 
 export enum TicketStatus {
   IN_PROGRESS = 'IN_PROGRESS',

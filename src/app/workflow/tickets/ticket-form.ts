@@ -1,16 +1,27 @@
 import { afterRenderEffect, Component, inject, input } from '@angular/core';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IServiceCharge, numberValidator, ServiceChargeForm } from './service-charge-form';
-import { IAccessory, IWorkLog, IWorkLogForm, ProductCondition, WorklogForm } from './worklog-form';
-import { IPurchaseInfo, PurchaseInfoForm, PurchaseStatus, ServiceType } from './purchase-info-form';
-import { ProductCategory } from '../../products/product-resource';
-import { IProductForm, ProductForm } from '../../products/product-form';
-import { CustomerForm, ICustomerForm } from '../../customers/customer-form';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ServiceChargeForm } from './service-charge-form';
+import { WorklogForm } from './worklog-form';
+import { PurchaseInfoForm, ServiceType } from './purchase-info-form';
+import { ProductForm } from '../../products/product-form';
+import { ICustomerForm } from '../../customers/customer-form-service';
 import { CreateServiceInput, TicketResource, TicketStatus, TicketView } from './ticket-resource';
 import { Button } from '../../shared/components/ui/button';
 import { Card } from '../../shared/components/cards/card';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
+import {
+  TicketFormService,
+  IAccessory,
+  IPurchaseInfo,
+  IServiceCharge,
+  IWorkLog,
+  IWorkLogForm,
+  ProductCondition,
+} from './ticket-form-service';
+import { IProductForm, ProductFormService } from '../../products/product-form-service';
+import { CustomerFormService } from '../../customers/customer-form-service';
+import { CustomerForm } from '../../customers/customer-form';
 
 export interface ITicketForm {
   product: FormGroup<IProductForm>;
@@ -26,9 +37,9 @@ export interface ITicketForm {
     ReactiveFormsModule,
     Button,
     Card,
-    CustomerForm,
     Card,
     Button,
+    CustomerForm,
     ProductForm,
     PurchaseInfoForm,
     ServiceChargeForm,
@@ -76,7 +87,10 @@ export interface ITicketForm {
           </app-card>
         }
         <app-card title="Service Charges Information">
-          <app-service-charge-form [formGroup]="form.controls.serviceCharge" />
+          <app-service-charge-form
+            [formGroup]="form.controls.serviceCharge"
+            [ticketId]="ticketId()"
+          />
         </app-card>
         @if (!ticketId()) {
           <div class="inline-flex self-end gap-3">
@@ -97,6 +111,9 @@ export class TicketForm {
 
   readonly ticketId = input('');
   protected ticketResource = inject(TicketResource);
+  protected ticketFormService = inject(TicketFormService);
+  protected customerFormService = inject(CustomerFormService);
+  protected productFormService = inject(ProductFormService);
 
   clear() {
     this.form.reset();
@@ -116,89 +133,23 @@ export class TicketForm {
     });
   }
 
-  protected customerForm = new FormGroup<ICustomerForm>({
-    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    mobile: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.pattern('^[+]?[0-9]+$'), // Validates optional + and digits
-        Validators.minLength(13),
-        Validators.maxLength(13),
-      ],
-    }),
-    alt_mobile: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.pattern('^[+]?[0-9]+$'), // Validates optional + and digits
-        Validators.minLength(13),
-        Validators.maxLength(13),
-      ],
-    }),
-    email: new FormControl(null, [Validators.email]),
-    address: new FormControl(null),
-    house_office: new FormControl(null),
-    street_building: new FormControl(null),
-    area: new FormControl(null),
-    pincode: new FormControl(null),
-    district: new FormControl(null),
-  });
-
-  protected productForm = new FormGroup<IProductForm>({
-    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    serial_number: new FormControl('', {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    category: new FormControl(ProductCategory.NORMAL_LAPTOP, {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    brand: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    model_name: new FormControl('', { nonNullable: true, validators: Validators.required }),
-  });
-
-  protected purchaseForm = new FormGroup<IPurchaseInfo>({
-    purchase_status: new FormControl(PurchaseStatus.ESQUIRE, {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    warranty_status: new FormControl(null, {
-      validators: Validators.required,
-    }),
-  });
-
-  protected worklogForm = new FormGroup<IWorkLogForm>({
-    product_condition: new FormControl(ProductCondition.GOOD, { nonNullable: true }),
-    work_logs: new FormArray<FormGroup<IWorkLog>>([]),
-    accessories: new FormArray<FormGroup<IAccessory>>([]),
-  });
-
-  protected serviceChargeForm = new FormGroup<IServiceCharge>({
-    quotation_amount: new FormControl('', [Validators.required, numberValidator]),
-    service_charge: new FormControl('', [Validators.required, numberValidator]),
-    advance_amount: new FormControl('', [Validators.required, numberValidator]),
-    total_amount: new FormControl({ value: '0', disabled: true }, [numberValidator]),
-    gst_amount: new FormControl({ value: '0', disabled: true }, [numberValidator]),
-  });
-
   readonly form = new FormGroup<ITicketForm>({
-    product: this.productForm,
-    customer: this.customerForm,
-    purchase: this.purchaseForm,
-    worklog: this.worklogForm,
-    serviceCharge: this.serviceChargeForm,
+    product: this.productFormService.productForm,
+    customer: this.customerFormService.customerForm,
+    purchase: this.ticketFormService.purchaseInfoForm,
+    worklog: this.ticketFormService.worklogForm,
+    serviceCharge: this.ticketFormService.serviceChargeForm,
   });
 
   openTicket() {
-    const request = this.toCreateRequest(this.form.value);
+    const request = this.toCreateRequest(this.form.getRawValue());
     this.ticketResource.create(request).subscribe({
       complete: () => this.form.reset(),
     });
   }
 
   toCreateRequest(form: FormGroup<ITicketForm>['value']): CreateServiceInput {
-    const { purchase, product, customer, worklog } = form;
+    const { purchase, product, customer, worklog, serviceCharge } = form;
     const purchaseInput = {
       ...(purchase?.purchase_status && { purchase_status: purchase.purchase_status }),
       ...(purchase?.warranty_status && { warranty_status: purchase.warranty_status }),
@@ -216,11 +167,11 @@ export class TicketForm {
       status: TicketStatus.IN_PROGRESS,
       service_type: ServiceType.INHOUSE,
       ...(purchase?.service_status && { service_status: purchase.service_status }),
-      quotation_amount: 40,
-      service_charge: 30,
-      gst_amount: 0,
-      total_amount: 50,
-      advance_amount: 20,
+      quotation_amount: Number(serviceCharge?.quotation_amount),
+      service_charge: Number(serviceCharge?.service_charge),
+      gst_amount: Number(serviceCharge?.gst_amount),
+      total_amount: Number(serviceCharge?.total_amount),
+      advance_amount: Number(serviceCharge?.advance_amount),
       product_condition: worklog?.product_condition as ProductCondition,
       purchase: purchaseInput,
       accessories,

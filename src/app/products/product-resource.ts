@@ -2,8 +2,8 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Customer } from '../customers/customer-resource';
 import { Apollo, gql, QueryRef } from 'apollo-angular';
 import { map } from 'rxjs';
-import { IProductForm } from './product-form';
 import { FormGroup } from '@angular/forms';
+import { IProductForm } from './product-form-service';
 
 export enum ProductCategory {
   NORMAL_LAPTOP = 'NORMAL_LAPTOP',

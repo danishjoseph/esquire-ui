@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Apollo, gql, QueryRef } from 'apollo-angular';
-import { ICustomerForm } from './customer-form';
+import { ICustomerForm } from './customer-form-service';
 import { FormGroup } from '@angular/forms';
 import { map } from 'rxjs';
 import { CUSTOMER_METRICS } from '../dashboard/dashboard-resource';

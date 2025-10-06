@@ -13,6 +13,7 @@ import { Input } from '../../shared/components/form/basic/input';
 import { Product } from '../../products/product-resource';
 import { Customer } from '../../customers/customer-resource';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TicketFormService, IPurchaseInfo } from './ticket-form-service';
 
 export interface Purchase {
   id: number;
@@ -50,18 +51,6 @@ export enum ServiceStatus {
   CHARGEABLE = 'CHARGEABLE',
   WARRANTY_FREE = 'WARRANTY_FREE',
   FREE = 'FREE',
-}
-
-export interface IPurchaseInfo {
-  purchase_status: FormControl<NonNullable<PurchaseStatus>>;
-  warranty_status: FormControl<WarrantyStatus | null>;
-  purchase_date?: FormControl<Date | null>;
-  invoice_number?: FormControl<string | null>;
-  warranty_expiry?: FormControl<Date | null>;
-  asc_start_date?: FormControl<Date | null>;
-  asc_expiry_date?: FormControl<Date | null>;
-  service_status?: FormControl<ServiceStatus | null>;
-  invoice_number_retype?: FormControl<string | null>;
 }
 
 @Component({
@@ -180,17 +169,11 @@ export class PurchaseInfoForm {
   readonly SERVICE_STATUS = ServiceStatus;
 
   protected destroyRef = inject(DestroyRef);
-  protected internalForm = new FormGroup<IPurchaseInfo>({
-    purchase_status: new FormControl(PurchaseStatus.ESQUIRE, {
-      nonNullable: true,
-      validators: Validators.required,
-    }),
-    warranty_status: new FormControl(null, {
-      validators: Validators.required,
-    }),
-  });
+  protected ticketFormService = inject(TicketFormService);
 
-  protected form = computed<FormGroup<IPurchaseInfo>>(() => this.formGroup() ?? this.internalForm);
+  protected form = computed<FormGroup<IPurchaseInfo>>(
+    () => this.formGroup() ?? this.ticketFormService.purchaseInfoForm,
+  );
 
   readonly purchaseOptions: Option[] = [
     { value: PurchaseStatus.NON_ESQUIRE, label: 'Non Esquire' },

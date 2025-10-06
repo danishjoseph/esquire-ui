@@ -1,41 +1,16 @@
 import { Component, computed, DestroyRef, inject, input } from '@angular/core';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from '../../shared/components/ui/button';
 import { TextArea } from '../../shared/components/form/basic/text-area';
 import { Select, Option } from '../../shared/components/form/basic/select';
-
-export enum LogType {
-  DIAGNOSIS = 'DIAGNOSIS',
-  UPDATE = 'UPDATE',
-  QA = 'QA',
-  FEEDBACK = 'FEEDBACK',
-}
-
-export enum ProductCondition {
-  EXCELLENT = 'EXCELLENT',
-  VERY_GOOD = 'VERY_GOOD',
-  GOOD = 'GOOD',
-  POOR = 'POOR',
-  VERY_POOR = 'VERY_POOR',
-  DAMAGED = 'DAMAGED',
-}
-
-export interface IWorkLog {
-  // created_by: FormControl<string | null>;
-  service_log_type: FormControl<NonNullable<LogType>>;
-  log_description: FormControl<string | null>;
-}
-
-export interface IAccessory {
-  accessory_name: FormControl<string>;
-  accessory_received: FormControl<boolean>;
-}
-
-export interface IWorkLogForm {
-  product_condition: FormControl<NonNullable<ProductCondition>>;
-  work_logs: FormArray<FormGroup<IWorkLog>>;
-  accessories: FormArray<FormGroup<IAccessory>>;
-}
+import {
+  TicketFormService,
+  IAccessory,
+  IWorkLog,
+  IWorkLogForm,
+  LogType,
+  ProductCondition,
+} from './ticket-form-service';
 
 @Component({
   selector: 'app-worklog-form',
@@ -142,13 +117,11 @@ export class WorklogForm {
     { value: ProductCondition.DAMAGED, label: 'Damaged' },
   ];
 
-  protected internalForm = new FormGroup<IWorkLogForm>({
-    product_condition: new FormControl(ProductCondition.GOOD, { nonNullable: true }),
-    work_logs: new FormArray<FormGroup<IWorkLog>>([]),
-    accessories: new FormArray<FormGroup<IAccessory>>([]),
-  });
+  protected ticketFormService = inject(TicketFormService);
 
-  protected form = computed<FormGroup<IWorkLogForm>>(() => this.formGroup() ?? this.internalForm);
+  protected form = computed<FormGroup<IWorkLogForm>>(
+    () => this.formGroup() ?? this.ticketFormService.worklogForm,
+  );
 
   readonly workLogTypeOptions: Option[] = [
     { value: LogType.DIAGNOSIS, label: 'Diagnosis' },

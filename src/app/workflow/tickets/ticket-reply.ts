@@ -1,17 +1,7 @@
-import {
-  afterRenderEffect,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  model,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, input, model, output } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { EMPTY, map, tap } from 'rxjs';
+import { EMPTY, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TicketResource } from './ticket-resource';
 import { DatePipe } from '@angular/common';
