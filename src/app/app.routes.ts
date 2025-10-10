@@ -42,7 +42,7 @@ export const routes: Routes = [
         path: 'service',
         children: [
           {
-            path: 'tickets',
+            path: 'tickets/:status',
             component: TicketList,
             pathMatch: 'full',
             title: 'Tickets | Esquire',
@@ -54,7 +54,7 @@ export const routes: Routes = [
             title: 'Create Ticket | Esquire',
           },
           {
-            path: 'reply/:id',
+            path: 'reply',
             component: TicketReply,
             pathMatch: 'full',
             title: 'Feedback Log | Esquire',

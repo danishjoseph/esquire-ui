@@ -56,6 +56,13 @@ export interface CreateServiceInput {
   service_logs: IWorkLog[];
 }
 
+interface UpdateServiceInput {
+  id: number;
+  status: TicketStatus;
+  service_section_name: ServiceSectionName | null;
+  service_logs: FormGroup<IWorkLog>['value'][];
+}
+
 interface ServiceStatusMetrics {
   total: number;
   pending: number;
@@ -77,7 +84,7 @@ interface ServiceSection {
 
 enum ServiceSectionName {
   LAP_CARE = 'LAP_CARE',
-  CHIP_LEVEL = ' CHIP_LEVEL',
+  CHIP_LEVEL = 'CHIP_LEVEL',
   DESKTOP_CARE = 'DESKTOP_CARE',
   IPG = 'IPG',
   VENDOR_ASP = 'VENDOR_ASP',
@@ -163,12 +170,14 @@ interface ServiceLogs {
     {
       accessory_name: string;
       accessory_received: boolean;
+      created_at: Date;
     },
   ];
   service_logs: [
     {
       service_log_type: LogType;
       log_description: string;
+      created_at: Date;
     },
   ];
   status: TicketStatus;
@@ -190,7 +199,7 @@ export interface TicketTable {
     customer: { name: string; mobile: string };
   };
   createdAt: Date;
-  serviceSection: { id: string; name: string } | null;
+  serviceSection: { id: string; name: ServiceSectionName } | null;
   assignedExecutive: null;
   status: TicketStatus;
 }
@@ -322,9 +331,20 @@ const GET_LOGS = gql<{ service: ServiceLogs }, number>`
       service_logs {
         service_log_type
         log_description
+        created_at
       }
       status
       created_at
+    }
+  }
+`;
+
+const UPDATE = gql<TicketResponse, unknown>`
+  mutation updateService($updateServiceInput: UpdateServiceInput!) {
+    updateService(updateServiceInput: $updateServiceInput) {
+      id
+      case_id
+      status
     }
   }
 `;
@@ -372,6 +392,19 @@ export class TicketResource {
         variables: { id: +id },
       })
       .valueChanges.pipe(map((res) => res.data));
+  }
+
+  update(updateServiceInput: UpdateServiceInput) {
+    return this.#apollo
+      .mutate({
+        mutation: UPDATE,
+        variables: { updateServiceInput },
+        refetchQueries: [
+          { query: GET_LOGS, variables: { id: updateServiceInput.id } },
+          { query: TICKETS, variables: { ...this.#ticketsRequestState() } },
+        ],
+      })
+      .pipe(map((res) => res.data));
   }
 
   serviceLogs(id: string) {

@@ -1,21 +1,40 @@
-import { Component, computed, inject, input, model, output } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
-import { EMPTY, map } from 'rxjs';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
+import { EMPTY } from 'rxjs';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { TicketResource } from './ticket-resource';
 import { DatePipe } from '@angular/common';
 import { AvatarText } from '../../shared/components/avatar/avatar-text';
+import { Button } from '../../shared/components/ui/button';
+import { TextArea } from '../../shared/components/form/basic/text-area';
+import { LogType } from './ticket-form-service';
+import { Select, Option } from '../../shared/components/form/basic/select';
+import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 
-// interface TicketMessage {
-//   id: number;
-//   userName: string;
-//   userEmail: string;
-//   userImage: string;
-//   time: string;
-//   content: string;
-//   isSupport?: boolean;
-// }
+export interface ITicketReplyForm {
+  id: FormControl<number>;
+  service_log_type: NonNullable<FormControl<string>>;
+  service_log_description: NonNullable<FormControl<string>>;
+  service_section_name: FormControl<ServiceSectionName>;
+  status: FormControl<TicketStatus>;
+}
+
+export enum ServiceSectionName {
+  LAP_CARE = 'LAP_CARE',
+  CHIP_LEVEL = 'CHIP_LEVEL',
+  DESKTOP_CARE = 'DESKTOP_CARE',
+  IPG = 'IPG',
+  VENDOR_ASP = 'VENDOR_ASP',
+  OUTSOURCE = 'OUTSOURCE',
+  HOLD = 'HOLD',
+}
 
 export enum TicketStatus {
   IN_PROGRESS = 'IN_PROGRESS',
@@ -27,9 +46,17 @@ export enum TicketStatus {
 
 @Component({
   selector: 'app-ticket-reply',
-  imports: [FormsModule, DatePipe, AvatarText],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    DatePipe,
+    AvatarText,
+    Button,
+    TextArea,
+    Select,
+    Badge,
+  ],
   template: `
-    <!-- ticket-reply.component.html -->
     <div
       class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
     >
@@ -38,9 +65,21 @@ export enum TicketStatus {
         class="flex flex-col justify-between gap-5 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center dark:border-gray-800"
       >
         <div>
-          <h3 class="text-lg font-medium text-gray-800 dark:text-white/90">
-            Ticket #{{ serviceLogs()?.case_id }}
-          </h3>
+          <div class="flex">
+            <h3 class="text-lg font-medium text-gray-800 dark:text-white/90">
+              Ticket #{{ serviceLogs()?.case_id }}
+            </h3>
+            &nbsp;
+            <app-badge
+              [color]="
+                ticketStatusInfoMap[ticketInfo().currentStatus || TICKET_STATUS.IN_PROGRESS].color
+              "
+            >
+              {{
+                ticketStatusInfoMap[ticketInfo().currentStatus || TICKET_STATUS.IN_PROGRESS].label
+              }}
+            </app-badge>
+          </div>
           <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ serviceLogs()?.created_at | date: 'short' }}
           </p>
@@ -124,131 +163,103 @@ export enum TicketStatus {
                   class="text-sm text-gray-500 dark:text-gray-400"
                   [innerHTML]="message.content"
                 ></p>
+                <app-badge size="sm" [color]="logTypeInfoMap[message.type].color">
+                  #{{ logTypeInfoMap[message.type].label }}
+                </app-badge>
               </div>
             </article>
           }
         </div>
 
         <!-- Reply Box -->
-        <div class="pt-5">
-          <div
-            class="mx-auto max-h-[162px] w-full rounded-2xl border border-gray-200 shadow-xs dark:border-gray-800 dark:bg-gray-800"
-          >
-            <textarea
-              [(ngModel)]="replyMessage"
-              placeholder="Type your reply here..."
-              class="h-20 w-full resize-none border-none bg-transparent p-5 text-gray-800 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-white"
-            ></textarea>
-            <!-- <app-text-area -->
-            <!--   id="reply_message" -->
-            <!--   placeholder="Type your reply here..." -->
-            <!--   class="h-20 w-full resize-none border-none bg-transparent p-5 font-normal text-gray-800 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-white" -->
-            <!-- /> -->
-            <div class="flex items-center justify-between p-3">
-              <button
-                class="flex h-9 items-center gap-1.5 rounded-lg bg-transparent px-2 py-3 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-300"
-              >
-                <!-- Attach Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none">
-                  <path
-                    d="M14.4194 11.7679L15.4506 10.7367C17.1591 9.02811 17.1591 6.25802 15.4506 4.54947C13.742 2.84093 10.9719 2.84093 9.2634 4.54947L8.2322 5.58067M11.77 14.4172L10.7365 15.4507C9.02799 17.1592 6.2579 17.1592 4.54935 15.4507C2.84081 13.7422 2.84081 10.9721 4.54935 9.26352L5.58285 8.23002M11.7677 8.23232L8.2322 11.7679"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                </svg>
-                Attach
-              </button>
-              <button
-                (click)="onReply()"
-                class="bg-brand-500 hover:bg-brand-600 shadow-theme-xs inline-flex h-9 items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white"
-              >
-                Reply
-              </button>
+        <form [formGroup]="form" (ngSubmit)="onReply()">
+          <div class="pt-5">
+            <div
+              class="mx-auto max-h-[162px] w-full rounded-2xl border border-gray-200 shadow-xs dark:border-gray-800 dark:bg-gray-800"
+            >
+              <app-text-area
+                id="reply_message"
+                placeholder="Type your reply here..."
+                formControlName="service_log_description"
+                className="h-20 w-full resize-none border-none bg-transparent p-5 font-normal text-gray-800 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-white"
+              />
+              <div class="flex items-center justify-between p-3">
+                <div class="flex items-center gap-2">
+                  <app-button size="xs" variant="transparent" [startIcon]="attachIcon">
+                    Attach
+                  </app-button>
+                  @if (!ticketInfo().serviceSection) {
+                    <app-select
+                      id="service_section_name"
+                      formControlName="service_section_name"
+                      placeholder="Service section name"
+                      [options]="serviceSectionNameOptions"
+                    />
+                  }
+                </div>
+                <app-button size="xs" type="submit" className="px-3"> Reply </app-button>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Status -->
-        <div class="mt-6 flex flex-wrap items-center gap-4">
-          <span class="text-gray-500 dark:text-gray-400">Status:</span>
-          <div class="flex items-center gap-4">
-            @for (status of ticketStaus; track $index) {
-              <label
-                class="flex cursor-pointer items-center text-sm font-medium text-gray-700 select-none dark:text-gray-400"
-              >
-                <input
-                  [ngModel]="status"
-                  type="radio"
-                  class="sr-only"
-                  [checked]="status === selected()"
-                  (change)="changeStatus(status)"
-                />
-                <div
-                  class="mr-3 flex h-4 w-4 items-center justify-center rounded-full border-[1.25px] hover:border-brand-500 dark:hover:border-brand-500 bg-transparent border-gray-300 dark:border-gray-700"
-                >
-                  <span class="h-1.5 w-1.5 rounded-full bg-white dark:bg-[#171f2e]"></span>
-                </div>
-                {{ status.toLowerCase() }}
-              </label>
-            }
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   `,
 })
 export class TicketReply {
   readonly TICKET_STATUS = TicketStatus;
-
-  readonly ticketStaus = Object.keys(TicketStatus);
-  readonly ticketMessages = [
-    {
-      id: 1,
-      userName: 'John Doe',
-      userEmail: 'jhondelin@gmail.com',
-      userImage: '/images/support/user-1.jpg',
-      time: 'Mon, 3:20 PM (2 hrs ago)',
-      content: `Hi TailAdmin Team,<br>I hope you're doing well.<br>I’m currently working on customizing the TailAdmin dashboard and would like to add a new section labeled “Reports.” Before I proceed, I wanted to check if there’s any official guide or best practice you recommend for adding custom pages within the TailAdmin structure.`,
-    },
-    {
-      id: 2,
-      userName: 'Musharof Chowdhury',
-      userEmail: 'support@tailadmin.com',
-      userImage: '/images/support/user-2.jpg',
-      time: 'Mon, 3:20 PM (1 hr ago)',
-      content: `Hi John D,<br>Thanks for reaching out! You can add a new "Reports" section by editing the sidebar configuration file (sidebarData.ts) and adding a new entry with the label "Reports" and route "/reports".`,
-      isSupport: true,
-    },
-    {
-      id: 3,
-      userName: 'John Doe',
-      userEmail: 'jhondelin@gmail.com',
-      userImage: '/images/support/user-1.jpg',
-      time: 'Mon, 3:20 PM (30 mins ago)',
-      content: `Thanks, Musharof! I’ll give it a try and update you if I face any issues.`,
-    },
-  ];
-
+  readonly attachIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path d="M14.4194 11.7679L15.4506 10.7367C17.1591 9.02811 17.1591 6.25802 15.4506 4.54947C13.742 2.84093 10.9719 2.84093 9.2634 4.54947L8.2322 5.58067M11.77 14.4172L10.7365 15.4507C9.02799 17.1592 6.2579 17.1592 4.54935 15.4507C2.84081 13.7422 2.84081 10.9721 4.54935 9.26352L5.58285 8.23002M11.7677 8.23232L8.2322 11.7679" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
   readonly currentPage = input<number>(1);
   readonly totalPages = input<number>(1);
-  readonly selected = model<TicketStatus>(TicketStatus.IN_PROGRESS);
 
-  protected ticketResource = inject(TicketResource);
+  readonly ticketInfo = signal({ ticketId: null, currentStatus: null, serviceSection: null });
 
-  reply = output<string>();
-  statusChange = output<TicketStatus>();
-
-  replyMessage = '';
-
-  protected route = inject(ActivatedRoute);
-  readonly ticketId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), {
-    initialValue: null,
+  readonly nextStatus = computed(() => {
+    const statusOrder = [
+      TicketStatus.IN_PROGRESS,
+      TicketStatus.QC,
+      TicketStatus.DELIVERY_READY,
+      TicketStatus.DELIVERED,
+      TicketStatus.CLOSED,
+    ];
+    const currentStatus = this.ticketInfo().currentStatus;
+    const currentIndex = statusOrder.indexOf(currentStatus ?? TicketStatus.IN_PROGRESS);
+    return currentIndex !== -1 && currentIndex < statusOrder.length - 1
+      ? statusOrder[currentIndex + 1]
+      : TicketStatus.IN_PROGRESS;
   });
 
+  readonly form = new FormGroup<ITicketReplyForm>({
+    id: new FormControl(),
+    status: new FormControl(),
+    service_log_type: new FormControl(LogType.STATUS_UPDATE, { nonNullable: true }),
+    service_log_description: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    service_section_name: new FormControl(),
+  });
+
+  protected ticketResource = inject(TicketResource);
+  protected router = inject(Router);
+  protected destroyRef = inject(DestroyRef);
+
+  constructor() {
+    const state = this.router.currentNavigation()?.extras.state;
+    if (state && typeof state === 'object' && 'ticketId' in state && 'currentStatus' in state) {
+      const { ticketId, currentStatus, serviceSection } = state;
+      this.ticketInfo.set({
+        ticketId,
+        currentStatus,
+        serviceSection,
+      });
+    } else {
+      this.router.navigate(['service/tickets']);
+    }
+  }
+
   protected resource = rxResource({
-    params: () => this.ticketId(),
+    params: () => this.ticketInfo().ticketId,
     stream: ({ params }) => (params ? this.ticketResource.serviceLogs(params) : EMPTY),
   });
 
@@ -259,35 +270,95 @@ export class TicketReply {
     return undefined;
   });
 
+  readonly serviceSectionNameOptions: Option[] = [
+    { value: ServiceSectionName.LAP_CARE, label: 'Lap Care' },
+    { value: ServiceSectionName.CHIP_LEVEL, label: 'Chip Level' },
+    { value: ServiceSectionName.DESKTOP_CARE, label: 'Desktop Care' },
+    { value: ServiceSectionName.IPG, label: 'IPG' },
+    { value: ServiceSectionName.VENDOR_ASP, label: 'Vendor ASP' },
+    { value: ServiceSectionName.OUTSOURCE, label: 'Outsource' },
+    { value: ServiceSectionName.HOLD, label: 'Hold' },
+  ];
+
+  readonly logTypeInfoMap: Record<LogType, { label: string; color: BadgeColor }> = {
+    [LogType.DIAGNOSIS]: {
+      label: 'Diagnosis',
+      color: 'warning',
+    },
+    [LogType.COMPLAINTS]: {
+      label: 'Complaints',
+      color: 'error',
+    },
+    [LogType.STATUS_UPDATE]: {
+      label: 'Update',
+      color: 'success',
+    },
+    [LogType.FEEDBACK]: {
+      label: 'Feedback',
+      color: 'primary',
+    },
+  };
+
+  readonly ticketStatusInfoMap: Record<TicketStatus, { label: string; color: BadgeColor }> = {
+    [TicketStatus.IN_PROGRESS]: {
+      label: 'In Progress',
+      color: 'warning',
+    },
+    [TicketStatus.QC]: {
+      label: 'QC',
+      color: 'primary',
+    },
+    [TicketStatus.DELIVERY_READY]: {
+      label: 'Delivery Ready',
+      color: 'success',
+    },
+    [TicketStatus.DELIVERED]: {
+      label: 'Delivered',
+      color: 'light',
+    },
+    [TicketStatus.CLOSED]: {
+      label: 'Closed',
+      color: 'dark',
+    },
+  };
+
   protected messages = computed(() => [
     ...(this.serviceLogs()?.accessories || []).map((item) => ({
       ...item,
       userName: 'Test User1',
       role: 'FOE',
-      time: new Date().toISOString(),
+      time: item.created_at,
+      type: LogType.DIAGNOSIS,
       content: `Accessories Attached: ${item.accessory_name}`,
     })),
     ...(this.serviceLogs()?.service_logs || []).map((item) => ({
       ...item,
       userName: 'Test User2',
       role: 'Executive',
-      time: new Date().toISOString(),
-      content: `Service Log:<br>
-              Type: ${item.service_log_type}<br>
-              Description: ${item.log_description}`, // Creating combined content for service_logs
+      time: item.created_at,
+      type: item.service_log_type,
+      content: `${item.log_description}`,
     })),
   ]);
 
   onReply() {
-    if (this.replyMessage.trim()) {
-      this.reply.emit(this.replyMessage);
-      this.replyMessage = '';
-    }
-  }
-
-  changeStatus(newStatus: string) {
-    console.log('newStatus', newStatus);
-    this.selected.set(newStatus as TicketStatus);
-    this.statusChange.emit(newStatus as TicketStatus);
+    const formValue = this.form.getRawValue();
+    const workLog = {
+      service_log_type: formValue.service_log_type as LogType,
+      log_description: formValue.service_log_description,
+    };
+    const serviceData = {
+      id: this.ticketInfo().ticketId as unknown as number,
+      status: this.nextStatus(),
+      service_logs: [workLog],
+      service_section_name: formValue.service_section_name,
+    };
+    return this.ticketResource
+      .update(serviceData)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => console.log(err),
+        complete: () => this.form.reset,
+      });
   }
 }

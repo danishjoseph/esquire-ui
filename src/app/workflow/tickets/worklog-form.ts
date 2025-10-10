@@ -125,8 +125,8 @@ export class WorklogForm {
 
   readonly workLogTypeOptions: Option[] = [
     { value: LogType.DIAGNOSIS, label: 'Diagnosis' },
-    { value: LogType.UPDATE, label: 'Update' },
-    { value: LogType.QA, label: 'QA' },
+    { value: LogType.STATUS_UPDATE, label: 'Update' },
+    { value: LogType.COMPLAINTS, label: 'Complaints' },
     { value: LogType.FEEDBACK, label: 'Feedback' },
   ];
 

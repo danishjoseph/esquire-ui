@@ -1,4 +1,12 @@
-import { Component, computed, inject, model, signal } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  model,
+  signal,
+} from '@angular/core';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { Dropdown } from '../../shared/components/ui/dropdown';
 import { PageBreadcrumb } from '../../shared/components/ui/page-breadcrumb';
@@ -7,12 +15,29 @@ import { DatePipe, KeyValue } from '@angular/common';
 import { TabGroup } from '../../shared/components/ui/tab-group';
 import { WorklogStatistics } from './worklog-statistics';
 import { Card } from '../../shared/components/cards/card';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { TicketResource, TicketStatus, TicketTable } from './ticket-resource';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
-import { debounceTime } from 'rxjs';
+import { debounceTime, map } from 'rxjs';
 import { TicketModal } from './ticket-modal';
+import { ServiceSectionName } from './ticket-reply';
+
+export const routeToStatusMap: Record<string, TicketStatus> = {
+  'in-progress': TicketStatus.IN_PROGRESS,
+  qc: TicketStatus.QC,
+  'delivery-ready': TicketStatus.DELIVERY_READY,
+  delivered: TicketStatus.DELIVERED,
+  closed: TicketStatus.CLOSED,
+};
+
+export const statusToRouteMap: Record<TicketStatus, string> = {
+  [TicketStatus.IN_PROGRESS]: 'in-progress',
+  [TicketStatus.QC]: 'qc',
+  [TicketStatus.DELIVERY_READY]: 'delivery-ready',
+  [TicketStatus.DELIVERED]: 'delivered',
+  [TicketStatus.CLOSED]: 'closed',
+};
 
 @Component({
   selector: 'app-ticket-list',
@@ -32,7 +57,7 @@ import { TicketModal } from './ticket-modal';
     <app-worklog-statistics />
     <app-card title="Support Tickets">
       <div card-actions class="flex flex-wrap overflow-x-auto w-full">
-        <app-tab-group [options]="buttonGroupOptions" [(selected)]="selectedTab" />
+        <app-tab-group [options]="ticketStatusOptions" [(selected)]="selectedTab" />
       </div>
       <div class="overflow-x-auto custom-scrollbar">
         @if (resource.hasValue() && resource.value().services.length) {
@@ -70,11 +95,6 @@ import { TicketModal } from './ticket-modal';
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
                   >
-                    Status
-                  </th>
-                  <th
-                    class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
-                  >
                     <span class="sr-only">Action</span>
                   </th>
                 </tr>
@@ -108,17 +128,25 @@ import { TicketModal } from './ticket-modal';
                       {{ item.createdAt | date: 'short' }}
                     </td>
                     <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-                      {{ item.serviceSection ? item.serviceSection.name : '-' }}
+                      <app-badge
+                        size="sm"
+                        [color]="
+                          item.serviceSection && item.serviceSection.name
+                            ? serviceSectionInfoMap[item.serviceSection.name].color
+                            : 'light'
+                        "
+                      >
+                        {{
+                          item.serviceSection && item.serviceSection.name
+                            ? serviceSectionInfoMap[item.serviceSection.name].label
+                            : '-'
+                        }}
+                      </app-badge>
                     </td>
                     <td
                       class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400 hidden sm:table-cell"
                     >
                       {{ item.assignedExecutive ?? '-' }}
-                    </td>
-                    <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-                      <app-badge size="sm" [color]="ticketStatusInfoMap[item.status].color">
-                        {{ ticketStatusInfoMap[item.status].label }}
-                      </app-badge>
                     </td>
                     <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
                       <app-dropdown>
@@ -176,6 +204,8 @@ export class TicketList {
   protected ticketId = model('');
   protected isOpen = signal(false);
   protected router = inject(Router);
+  protected route = inject(ActivatedRoute);
+  protected destroyRef = inject(DestroyRef);
   protected ticketResource = inject(TicketResource);
   readonly selectedTab = model(TicketStatus.IN_PROGRESS);
 
@@ -185,6 +215,34 @@ export class TicketList {
   protected search = toSignal(this.search$.valueChanges.pipe(debounceTime(500)), {
     initialValue: '',
   });
+
+  constructor() {
+    toSignal(
+      this.route.params.pipe(
+        takeUntilDestroyed(this.destroyRef),
+        map((params: Params) => {
+          const routeStatus = params['status'];
+          const mappedStatus = routeToStatusMap[routeStatus];
+          if (mappedStatus && Object.values(TicketStatus).includes(mappedStatus)) {
+            this.selectedTab.set(mappedStatus || TicketStatus.IN_PROGRESS);
+          }
+        }),
+      ),
+      { initialValue: null },
+    );
+
+    afterRenderEffect(() => {
+      const status = this.selectedTab();
+      const routeParam = this.route.snapshot.params['status'];
+      const newRouteParam = statusToRouteMap[status];
+      if (newRouteParam && routeParam !== newRouteParam) {
+        this.router.navigate(['../', newRouteParam], {
+          relativeTo: this.route,
+          replaceUrl: true,
+        });
+      }
+    });
+  }
 
   protected resource = rxResource({
     params: () => ({ search: this.search(), status: this.selectedTab() }),
@@ -215,10 +273,16 @@ export class TicketList {
   }
 
   handleUpdate(item: TicketTable) {
-    this.router.navigate(['/service/reply', item.id]);
+    this.router.navigate(['/service/reply'], {
+      state: {
+        ticketId: item.id,
+        currentStatus: this.selectedTab(),
+        serviceSection: item.serviceSection?.name,
+      },
+    });
   }
 
-  protected buttonGroupOptions: KeyValue<string, string>[] = [
+  protected ticketStatusOptions: KeyValue<string, string>[] = [
     { key: TicketStatus.IN_PROGRESS, value: 'In Progress' },
     { key: TicketStatus.QC, value: 'QC' },
     { key: TicketStatus.DELIVERY_READY, value: 'Delivery Ready' },
@@ -226,26 +290,34 @@ export class TicketList {
     { key: TicketStatus.CLOSED, value: 'Closed' },
   ];
 
-  ticketStatusInfoMap: Record<TicketStatus, { label: string; color: BadgeColor }> = {
-    [TicketStatus.IN_PROGRESS]: {
-      label: 'In Progress',
+  serviceSectionInfoMap: Record<ServiceSectionName, { label: string; color: BadgeColor }> = {
+    [ServiceSectionName.LAP_CARE]: {
+      label: 'Laptop Care',
+      color: 'primary',
+    },
+    [ServiceSectionName.CHIP_LEVEL]: {
+      label: 'Chip Level Repair',
+      color: 'error',
+    },
+    [ServiceSectionName.DESKTOP_CARE]: {
+      label: 'Desktop Care',
       color: 'info',
     },
-    [TicketStatus.QC]: {
-      label: 'QC',
-      color: 'error',
+    [ServiceSectionName.IPG]: {
+      label: 'Industrial Printing Group',
+      color: 'success',
     },
-    [TicketStatus.DELIVERY_READY]: {
-      label: 'Delivery Ready',
+    [ServiceSectionName.VENDOR_ASP]: {
+      label: 'Vendor Authorized Service Provider',
       color: 'light',
     },
-    [TicketStatus.DELIVERED]: {
-      label: 'Delivered',
-      color: 'error',
+    [ServiceSectionName.OUTSOURCE]: {
+      label: 'Outsource',
+      color: 'warning',
     },
-    [TicketStatus.CLOSED]: {
-      label: 'Closed',
-      color: 'error',
+    [ServiceSectionName.HOLD]: {
+      label: 'On Hold',
+      color: 'dark',
     },
   };
 }

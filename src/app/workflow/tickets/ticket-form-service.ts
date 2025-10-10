@@ -12,8 +12,8 @@ import { PurchaseStatus, ServiceStatus, WarrantyStatus } from './purchase-info-f
 
 export enum LogType {
   DIAGNOSIS = 'DIAGNOSIS',
-  UPDATE = 'UPDATE',
-  QA = 'QA',
+  COMPLAINTS = 'COMPLAINTS',
+  STATUS_UPDATE = 'STATUS_UPDATE',
   FEEDBACK = 'FEEDBACK',
 }
 
