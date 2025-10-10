@@ -42,6 +42,11 @@ export const routes: Routes = [
         path: 'service',
         children: [
           {
+            path: 'tickets',
+            pathMatch: 'full',
+            redirectTo: 'tickets/in-progress',
+          },
+          {
             path: 'tickets/:status',
             component: TicketList,
             pathMatch: 'full',

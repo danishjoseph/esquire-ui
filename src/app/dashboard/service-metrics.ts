@@ -17,7 +17,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
         size="xs"
         variant="icon"
         [startIcon]="icons.serviceIcon"
-        (btnClick)="router.navigate(['/service/tickets/in-progress'])"
+        (btnClick)="router.navigate(['/service/tickets'])"
       />
       <div class="flex items-end justify-between mt-5">
         <div>

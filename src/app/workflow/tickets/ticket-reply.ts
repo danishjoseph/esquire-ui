@@ -358,7 +358,7 @@ export class TicketReply {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.log(err),
-        complete: () => this.form.reset,
+        complete: () => this.form.reset(),
       });
   }
 }
