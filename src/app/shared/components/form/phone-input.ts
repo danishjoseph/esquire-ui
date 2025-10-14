@@ -1,4 +1,4 @@
-import { Component, computed, effect, forwardRef, input, model, signal } from '@angular/core';
+import { Component, computed, effect, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { noop } from 'rxjs';
 import { Label } from './basic/label';
@@ -76,12 +76,12 @@ const DEFAULT_COUNTRY_CODE = [
         type="tel"
         [id]="id()"
         [placeholder]="placeholder()"
+        [class]="inputClasses()"
         [class]="(selectPosition() === 'start' ? 'pl-[84px]' : 'pr-[84px]') + ' ' + inputClasses()"
         [disabled]="disabled()"
         [value]="phoneNumber()"
         (input)="handlePhoneNumberChange($event)"
         (blur)="onTouched()"
-        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-3 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
       />
 
       <!-- Dropdown position: End -->
@@ -146,14 +146,15 @@ export class PhoneInput implements ControlValueAccessor {
   readonly selectPosition = input<'start' | 'end'>('start');
   readonly success = input<boolean>(false);
   readonly error = input<boolean>(false);
-  readonly disabled = model<boolean>(false);
   readonly hint = input<string>();
   readonly className = input<string>('');
 
   #country = signal('');
   #phoneNumber = signal('');
+  #disabled = signal(false);
   readonly phoneNumber = this.#phoneNumber.asReadonly();
   readonly country = this.#country.asReadonly();
+  readonly disabled = this.#disabled.asReadonly();
 
   countryCodes: Record<string, string> = {};
 
@@ -226,6 +227,6 @@ export class PhoneInput implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean) {
-    this.disabled.set(isDisabled);
+    this.#disabled.set(isDisabled);
   }
 }
