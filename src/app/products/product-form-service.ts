@@ -3,6 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ProductCategory } from './product-resource';
 
 export interface IProductForm {
+  id: FormControl<number | null>;
   name: NonNullable<FormControl<string>>;
   serial_number: NonNullable<FormControl<string>>;
   category: NonNullable<FormControl<ProductCategory>>;
@@ -15,6 +16,7 @@ export interface IProductForm {
 })
 export class ProductFormService {
   readonly productForm = new FormGroup<IProductForm>({
+    id: new FormControl(null),
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     serial_number: new FormControl('', {
       nonNullable: true,

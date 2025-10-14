@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 export interface ICustomerForm {
+  id: FormControl<number | null>;
   name: NonNullable<FormControl<string>>;
   mobile: NonNullable<FormControl<string>>;
   alt_mobile: FormControl<string | null>;
@@ -19,6 +20,7 @@ export interface ICustomerForm {
 })
 export class CustomerFormService {
   readonly customerForm = new FormGroup<ICustomerForm>({
+    id: new FormControl(null),
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
     mobile: new FormControl('', {
       nonNullable: true,
