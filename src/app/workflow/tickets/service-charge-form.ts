@@ -63,9 +63,14 @@ import { TicketFormService, IServiceCharge } from './ticket-form-service';
             formControlName="advance_amount"
             [error]="
               !!(
-                form().get('advance_amount')?.errors &&
+                (form().get('advance_amount')?.errors || form().hasError('advanceAmountTooHigh')) &&
                 (form().get('advance_amount')?.touched || form().get('advance_amount')?.dirty)
               )
+            "
+            [hint]="
+              form().hasError('advanceAmountTooHigh')
+                ? 'Advance amount should not exceed the quotation amount.'
+                : ''
             "
           />
         </div>

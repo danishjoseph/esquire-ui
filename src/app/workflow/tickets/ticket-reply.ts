@@ -17,6 +17,7 @@ import { TextArea } from '../../shared/components/form/basic/text-area';
 import { LogType } from './ticket-form-service';
 import { Select, Option } from '../../shared/components/form/basic/select';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
+import { statusToRouteMap } from './ticket-list';
 
 export interface ITicketReplyForm {
   id: FormControl<number>;
@@ -358,7 +359,10 @@ export class TicketReply {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.log(err),
-        complete: () => this.form.reset(),
+        complete: () => {
+          this.form.reset();
+          this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
+        },
       });
   }
 }

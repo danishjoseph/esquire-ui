@@ -149,7 +149,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                       {{ item.assignedExecutive ?? '-' }}
                     </td>
                     <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-                      <app-dropdown>
+                      <app-dropdown className="absolute right-0 z-10 w-40">
                         <div dropdown-button>
                           <button class="text-gray-500 dark:text-gray-400">
                             <svg
@@ -176,12 +176,14 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                           >
                             View More
                           </button>
-                          <button
-                            class="text-sm flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-                            (click)="handleUpdate(item)"
-                          >
-                            Update Status
-                          </button>
+                          @if (item.status !== TICKET_STATUS.CLOSED) {
+                            <button
+                              class="text-sm flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                              (click)="handleUpdate(item)"
+                            >
+                              Update Status
+                            </button>
+                          }
                         </div>
                       </app-dropdown>
                     </td>
@@ -208,6 +210,7 @@ export class TicketList {
   protected destroyRef = inject(DestroyRef);
   protected ticketResource = inject(TicketResource);
   readonly selectedTab = model(TicketStatus.IN_PROGRESS);
+  protected TICKET_STATUS = TicketStatus;
 
   #limit = 10;
 
