@@ -57,7 +57,7 @@ export interface ITicketForm {
         <app-card title="Customer Information">
           @if (!ticketId()) {
             <div class="flex justify-end">
-              <app-dropdown class="relative" className="absolute w-full">
+              <app-dropdown class="relative" className="absolute w-full z-10">
                 <div dropdown-button>
                   <app-search-input placeholder="Add Existing" [formControl]="customerSearch$" />
                 </div>
