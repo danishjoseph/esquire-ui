@@ -163,8 +163,9 @@ export class CustomerForm {
   readonly reset = input<boolean>();
   readonly formSubmit = output();
   readonly customerId = input('');
+
+  private destroyRef = inject(DestroyRef);
   protected customerResource = inject(CustomerResource);
-  protected destroyRef = inject(DestroyRef);
   protected customerFormService = inject(CustomerFormService);
 
   protected form = computed<FormGroup<ICustomerForm>>(
@@ -182,6 +183,9 @@ export class CustomerForm {
         const data = this.resource.value().customer;
         this.form().patchValue(data);
       }
+    });
+    this.destroyRef.onDestroy(() => {
+      this.form().reset();
     });
   }
 

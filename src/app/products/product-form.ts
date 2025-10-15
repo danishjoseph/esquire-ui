@@ -108,8 +108,9 @@ export class ProductForm {
   readonly formGroup = input<FormGroup<IProductForm>>();
   readonly formSubmit = output();
   readonly productId = input('');
+
+  private destroyRef = inject(DestroyRef);
   protected productResource = inject(ProductResource);
-  protected destroyRef = inject(DestroyRef);
   protected productFormService = inject(ProductFormService);
   protected categoryOptions = productCategoryOptions;
 
@@ -128,6 +129,9 @@ export class ProductForm {
         const data = this.resource.value().product;
         this.form().patchValue(data);
       }
+    });
+    this.destroyRef.onDestroy(() => {
+      this.form().reset();
     });
   }
 
