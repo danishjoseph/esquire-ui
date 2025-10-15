@@ -149,7 +149,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                       {{ item.assignedExecutive ?? '-' }}
                     </td>
                     <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-                      <app-dropdown className="absolute right-0 z-10 w-40">
+                      <app-dropdown class="relative" className="absolute right-0 z-10 w-40">
                         <div dropdown-button>
                           <button class="text-gray-500 dark:text-gray-400">
                             <svg

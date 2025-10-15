@@ -118,8 +118,8 @@ function transformCustomerData(customers: Customer[]): ICustomerTable[] {
                 {{ row.address }}
               </p>
             </td>
-            <td class="relative px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-              <app-dropdown>
+            <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
+              <app-dropdown class="relative" className="absolute right-0 w-40 z-10">
                 <div dropdown-button>
                   <button class="text-gray-500 dark:text-gray-400">
                     <svg
