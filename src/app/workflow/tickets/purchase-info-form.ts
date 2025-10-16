@@ -280,6 +280,9 @@ export class PurchaseInfoForm {
     if (this.form().get('asc_expiry_date')) {
       this.form().removeControl('asc_expiry_date');
     }
+    if (this.form().get('service_status')) {
+      this.form().removeControl('service_status');
+    }
   }
 
   private filterWarrantyOptions(purchaseStatus: PurchaseStatus) {
