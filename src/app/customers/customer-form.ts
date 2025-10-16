@@ -15,6 +15,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
 import { PhoneInput } from '../shared/components/form/phone-input';
 import { CustomerFormService, ICustomerForm } from './customer-form-service';
+import { NotificationService } from '../shared/components/ui/notification-service';
 
 @Component({
   selector: 'app-customer-form',
@@ -167,6 +168,7 @@ export class CustomerForm {
   private destroyRef = inject(DestroyRef);
   protected customerResource = inject(CustomerResource);
   protected customerFormService = inject(CustomerFormService);
+  protected notificationService = inject(NotificationService);
 
   protected form = computed<FormGroup<ICustomerForm>>(
     () => this.formGroup() ?? this.customerFormService.customerForm,
@@ -199,19 +201,27 @@ export class CustomerForm {
   }
 
   save() {
-    this.customerResource.create(this.form().value).subscribe({
-      complete: () => this.closeModal(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...createData } = this.form().value;
+    this.customerResource.create(createData).subscribe({
+      complete: () => {
+        this.notificationService.showNotification('Customer Saved', 'success');
+        this.closeModal();
+      },
     });
   }
 
   update() {
-    const customerData = {
+    const updateData = {
       ...this.form().value,
       id: +this.customerId(),
     };
 
-    this.customerResource.update(customerData).subscribe({
-      complete: () => this.closeModal(),
+    this.customerResource.update(updateData).subscribe({
+      complete: () => {
+        this.notificationService.showNotification('Customer Updated', 'success');
+        this.closeModal();
+      },
     });
   }
 }

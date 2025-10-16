@@ -26,7 +26,9 @@ interface ListResponse {
   services: TicketTable[];
 }
 
-type TicketResponse = CreateServiceInput;
+interface TicketResponse {
+  createService: CreateServiceInput & { caseId: string };
+}
 
 export interface CreateServiceInput {
   status: TicketStatus;
@@ -291,7 +293,7 @@ const CREATE = gql<TicketResponse, unknown>`
     createService(createServiceInput: $createServiceInput) {
       id
       status
-      case_id
+      caseId: case_id
     }
   }
 `;

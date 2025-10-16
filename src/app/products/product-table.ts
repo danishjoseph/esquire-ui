@@ -4,6 +4,7 @@ import { ProductCategory, ProductList, ProductResource } from './product-resourc
 import { Button } from '../shared/components/ui/button';
 import { productCategoryOptions } from './product-form';
 import { ProductModal } from './product-modal';
+import { NotificationService } from '../shared/components/ui/notification-service';
 
 @Component({
   selector: 'app-product-table',
@@ -105,6 +106,7 @@ export class ProductTable {
   readonly deleteIcon = `<svg width="1em" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
 
   protected productResource = inject(ProductResource);
+  protected notificationService = inject(NotificationService);
 
   protected productId = model('');
   protected isOpen = signal(false);
@@ -124,7 +126,9 @@ export class ProductTable {
   }
 
   deleteProduct(id: string) {
-    this.productResource.remove(id).subscribe();
+    this.productResource.remove(id).subscribe({
+      complete: () => this.notificationService.showNotification('Product Deleted', 'success'),
+    });
   }
 
   categoryInfoMap: Record<ProductCategory, { label: string; color: BadgeColor }> = {

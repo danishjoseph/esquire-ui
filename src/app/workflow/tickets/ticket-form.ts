@@ -26,6 +26,7 @@ import { Dropdown } from '../../shared/components/ui/dropdown';
 import { Customer, CustomerResource } from '../../customers/customer-resource';
 import { ProductList, ProductResource } from '../../products/product-resource';
 import { SearchInput } from '../../shared/components/form/search-input';
+import { NotificationService } from '../../shared/components/ui/notification-service';
 
 export interface ITicketForm {
   product: FormGroup<IProductForm>;
@@ -163,6 +164,7 @@ export class TicketForm {
   private destroyRef = inject(DestroyRef);
   protected customerResource = inject(CustomerResource);
   protected productResource = inject(ProductResource);
+  protected notificationService = inject(NotificationService);
 
   protected customerSearch$ = new FormControl('', { nonNullable: true });
   protected customerSearch = toSignal(this.customerSearch$.valueChanges.pipe(debounceTime(500)), {
@@ -241,12 +243,22 @@ export class TicketForm {
   openTicket() {
     const request = this.toCreateRequest(this.form.getRawValue());
     this.ticketResource.create(request).subscribe({
-      complete: () => this.form.reset(),
+      next: (res) => {
+        this.notificationService.showNotification(`Ticket Created ${res?.createService.caseId}`);
+        this.form.reset();
+      },
     });
   }
 
   toCreateRequest(form: FormGroup<ITicketForm>['value']): CreateServiceInput {
+    console.log('form', form);
     const { purchase, product, customer, worklog, serviceCharge } = form;
+    if (product?.id === null) {
+      delete product.id;
+    }
+    if (customer?.id === null) {
+      delete customer.id;
+    }
     const purchaseInput = {
       ...(purchase?.purchase_status && { purchase_status: purchase.purchase_status }),
       ...(purchase?.warranty_status && { warranty_status: purchase.warranty_status }),

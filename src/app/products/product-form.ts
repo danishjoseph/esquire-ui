@@ -15,6 +15,7 @@ import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY } from 'rxjs';
 import { Option, Select } from '../shared/components/form/basic/select';
 import { IProductForm, ProductFormService } from './product-form-service';
+import { NotificationService } from '../shared/components/ui/notification-service';
 
 export const productCategoryOptions: Option[] = [
   { value: ProductCategory.NORMAL_LAPTOP, label: 'Normal Laptop' },
@@ -44,24 +45,6 @@ export const productCategoryOptions: Option[] = [
 
         <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
           <div class="col-span-1">
-            <app-input
-              id="name"
-              label="Product Name"
-              placeholder="Product Name"
-              formControlName="name"
-            />
-          </div>
-
-          <div class="col-span-1">
-            <app-input
-              id="model_name"
-              label="Model"
-              placeholder="Model Name"
-              formControlName="model_name"
-            />
-          </div>
-
-          <div class="col-span-1">
             <app-select
               id="category"
               label="Category"
@@ -73,10 +56,28 @@ export const productCategoryOptions: Option[] = [
 
           <div class="col-span-1">
             <app-input
+              id="name"
+              label="Product Name"
+              placeholder="Product Name"
+              formControlName="name"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <app-input
               id="brand"
               label="Brand"
               placeholder="Product Brand"
               formControlName="brand"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <app-input
+              id="model_name"
+              label="Model"
+              placeholder="Model Name"
+              formControlName="model_name"
             />
           </div>
 
@@ -112,6 +113,7 @@ export class ProductForm {
   private destroyRef = inject(DestroyRef);
   protected productResource = inject(ProductResource);
   protected productFormService = inject(ProductFormService);
+  protected notificationService = inject(NotificationService);
   protected categoryOptions = productCategoryOptions;
 
   protected form = computed<FormGroup<IProductForm>>(
@@ -145,23 +147,30 @@ export class ProductForm {
   }
 
   save() {
-    this.productResource.create(this.form().value).subscribe({
-      complete: () => this.closeModal(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...createData } = this.form().value;
+    this.productResource.create(createData).subscribe({
+      complete: () => {
+        this.notificationService.showNotification('Product Saved', 'success');
+        this.closeModal();
+      },
     });
   }
 
   update() {
-    const productData = {
+    const updateData = {
       ...this.form().value,
       id: +this.productId(),
     };
 
     this.productResource
-      .update(productData)
+      .update(updateData)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: (err) => console.log(err),
-        complete: () => this.closeModal(),
+        complete: () => {
+          this.notificationService.showNotification('Product Updated', 'success');
+          this.closeModal();
+        },
       });
   }
 }

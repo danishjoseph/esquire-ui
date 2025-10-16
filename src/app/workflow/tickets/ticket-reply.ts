@@ -18,6 +18,7 @@ import { LogType } from './ticket-form-service';
 import { Select, Option } from '../../shared/components/form/basic/select';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { statusToRouteMap } from './ticket-list';
+import { NotificationService } from '../../shared/components/ui/notification-service';
 
 export interface ITicketReplyForm {
   id: FormControl<number>;
@@ -244,6 +245,7 @@ export class TicketReply {
   protected ticketResource = inject(TicketResource);
   protected router = inject(Router);
   protected destroyRef = inject(DestroyRef);
+  protected notificationStore = inject(NotificationService);
 
   constructor() {
     const state = this.router.currentNavigation()?.extras.state;
@@ -358,7 +360,6 @@ export class TicketReply {
       .update(serviceData)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: (err) => console.log(err),
         complete: () => {
           this.form.reset();
           this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);

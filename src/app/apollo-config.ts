@@ -7,10 +7,12 @@ import { environment } from '../environments/environment';
 import { offsetLimitPagination } from '@apollo/client/utilities';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { firstValueFrom } from 'rxjs';
+import { NotificationService } from './shared/components/ui/notification-service';
 
 export function apolloConfig(): ApolloClientOptions<unknown> {
   const httpLink = inject(HttpLink);
   const oidc = inject(OidcSecurityService);
+  const notificationStore = inject(NotificationService);
 
   const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
@@ -19,10 +21,12 @@ export function apolloConfig(): ApolloClientOptions<unknown> {
           `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
         );
       });
+      notificationStore.showNotification('Something went wrong!', 'error');
     }
 
     if (networkError) {
       console.error(`[Network error]: ${networkError}`);
+      notificationStore.showNotification('Network error occurred!', 'warning');
     }
   });
 
