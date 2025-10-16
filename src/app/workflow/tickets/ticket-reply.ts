@@ -177,7 +177,7 @@ export enum TicketStatus {
         <form [formGroup]="form" (ngSubmit)="onReply()">
           <div class="pt-5">
             <div
-              class="mx-auto max-h-[162px] w-full rounded-2xl border border-gray-200 shadow-xs dark:border-gray-800 dark:bg-gray-800"
+              class="mx-auto w-full rounded-2xl border border-gray-200 shadow-xs dark:border-gray-800 dark:bg-gray-800"
             >
               <app-text-area
                 id="reply_message"
@@ -185,21 +185,21 @@ export enum TicketStatus {
                 formControlName="service_log_description"
                 className="h-20 w-full resize-none border-none bg-transparent p-5 font-normal text-gray-800 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-white"
               />
-              <div class="flex items-center justify-between p-3">
-                <div class="flex items-center gap-2">
-                  <!-- <app-button size="xs" variant="transparent" [startIcon]="attachIcon"> -->
-                  <!--   Attach -->
-                  <!-- </app-button> -->
-                  @if (!ticketInfo().serviceSection) {
-                    <app-select
-                      id="service_section_name"
-                      formControlName="service_section_name"
-                      placeholder="Service section name"
-                      [options]="serviceSectionNameOptions"
-                    />
-                  }
-                </div>
-                <app-button size="sm" type="submit" className="px-3" [disabled]="form.invalid">
+              <div class="flex items-center gap-2">
+                <app-button size="xs" variant="transparent" [startIcon]="attachIcon">
+                  Attach
+                </app-button>
+                @if (!ticketInfo().serviceSection) {
+                  <app-select
+                    id="service_section_name"
+                    formControlName="service_section_name"
+                    placeholder="Service section name"
+                    [options]="serviceSectionNameOptions"
+                  />
+                }
+              </div>
+              <div class="flex items-center justify-center md:justify-end p-3">
+                <app-button type="submit" [disabled]="form.invalid">
                   {{ buttonText() }}
                 </app-button>
               </div>
