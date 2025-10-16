@@ -17,42 +17,43 @@ export type NotificationVariant = 'success' | 'error' | 'info' | 'warning';
   selector: 'app-notification',
   imports: [SafeHtmlPipe, Button],
   template: `
-    <div
-      class="fixed top-5 left-1/2 transform -translate-x-1/2 z-999999 border-b-4 dark:bg-[#1E2634] flex gap-3 items-center justify-between p-2 rounded-md shadow-theme-sm sm:max-w-[320px] w-full"
-      [class]="{
-        'border-success-500': notification().variant === 'success',
-        'border-error-500': notification().variant === 'error',
-        'border-blue-light-500': notification().variant === 'info',
-        'border-warning-500': notification().variant === 'warning',
-      }"
-      [style.opacity]="isVisible() ? '1' : '0'"
-    >
-      <div class="flex items-center gap-3">
-        <div
-          class="flex items-center justify-center w-12 h-12 rounded-lg bg-success-50 text-success-500"
-          [class]="{
-            'bg-success-50': notification().variant === 'success',
-            'bg-error-50': notification().variant === 'error',
-            'bg-blue-light-50': notification().variant === 'info',
-            'bg-warning-50': notification().variant === 'warning',
-          }"
-        >
-          <span [innerHTML]="icon() | appSafeHtml"></span>
+    @if (isVisible()) {
+      <div
+        class="fixed top-2 left-2 right-2 sm:right-2 sm:left-auto p-2 z-[999999] border-b-4 bg-white dark:bg-[#1E2634] flex gap-3 items-center justify-between rounded-md shadow-theme-sm sm:max-w-[320px] w-auto sm:w-full"
+        [class]="{
+          'border-success-500': notification().variant === 'success',
+          'border-error-500': notification().variant === 'error',
+          'border-blue-light-500': notification().variant === 'info',
+          'border-warning-500': notification().variant === 'warning',
+        }"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="flex items-center justify-center w-12 h-12 rounded-lg bg-success-50 text-success-500"
+            [class]="{
+              'bg-success-50': notification().variant === 'success',
+              'bg-error-50': notification().variant === 'error',
+              'bg-blue-light-50': notification().variant === 'info',
+              'bg-warning-50': notification().variant === 'warning',
+            }"
+          >
+            <span [innerHTML]="icon() | appSafeHtml"></span>
+          </div>
+          <div>
+            <p class="text-sm text-gray-800 sm:text-base dark:text-white/90">
+              {{ notification().text }}
+            </p>
+          </div>
         </div>
-        <div>
-          <p class="text-sm text-gray-800 sm:text-base dark:text-white/90">
-            {{ notification().text }}
-          </p>
-        </div>
+        <app-button
+          size="xs"
+          variant="transparent"
+          class="text-gray-400 hover:text-gray-800 dark:hover:text-white/90"
+          [startIcon]="closeIcon"
+          (btnClick)="clear()"
+        />
       </div>
-      <app-button
-        size="xs"
-        variant="transparent"
-        class="text-gray-400 hover:text-gray-800 dark:hover:text-white/90"
-        [startIcon]="closeIcon"
-        (btnClick)="clear()"
-      />
-    </div>
+    }
   `,
 })
 export class Notification {

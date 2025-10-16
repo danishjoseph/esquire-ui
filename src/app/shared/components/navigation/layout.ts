@@ -4,11 +4,13 @@ import { SidebarStore } from './sidebar-store';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { Backdrop } from './backdrop';
+import { Notification } from '../ui/notification';
 
 @Component({
   selector: 'app-layout',
-  imports: [RouterModule, Sidebar, Header, Backdrop],
-  template: `<div class="min-h-screen xl:flex">
+  imports: [RouterModule, Sidebar, Header, Backdrop, Notification],
+  template: ` <div class="min-h-screen xl:flex">
+    <app-notification />
     <div>
       <app-sidebar />
       <app-backdrop />

@@ -187,9 +187,9 @@ export enum TicketStatus {
               />
               <div class="flex items-center justify-between p-3">
                 <div class="flex items-center gap-2">
-                  <app-button size="xs" variant="transparent" [startIcon]="attachIcon">
-                    Attach
-                  </app-button>
+                  <!-- <app-button size="xs" variant="transparent" [startIcon]="attachIcon"> -->
+                  <!--   Attach -->
+                  <!-- </app-button> -->
                   @if (!ticketInfo().serviceSection) {
                     <app-select
                       id="service_section_name"
@@ -199,7 +199,9 @@ export enum TicketStatus {
                     />
                   }
                 </div>
-                <app-button size="xs" type="submit" className="px-3"> Reply </app-button>
+                <app-button size="sm" type="submit" className="px-3" [disabled]="form.invalid">
+                  {{ buttonText() }}
+                </app-button>
               </div>
             </div>
           </div>
@@ -245,7 +247,7 @@ export class TicketReply {
   protected ticketResource = inject(TicketResource);
   protected router = inject(Router);
   protected destroyRef = inject(DestroyRef);
-  protected notificationStore = inject(NotificationService);
+  protected notificationService = inject(NotificationService);
 
   constructor() {
     const state = this.router.currentNavigation()?.extras.state;
@@ -271,6 +273,12 @@ export class TicketReply {
       return this.resource.value().service;
     }
     return undefined;
+  });
+
+  protected buttonText = computed(() => {
+    const { serviceSection } = this.ticketInfo();
+    if (!serviceSection) return 'Assign Section / Update';
+    else return `Move to ${statusToRouteMap[this.nextStatus()]}`;
   });
 
   readonly serviceSectionNameOptions: Option[] = [
@@ -362,7 +370,12 @@ export class TicketReply {
       .subscribe({
         complete: () => {
           this.form.reset();
-          this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
+          if (!this.ticketInfo().serviceSection) {
+            this.router.navigateByUrl(`/service/tickets/${statusToRouteMap['IN_PROGRESS']}`);
+          } else {
+            this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
+          }
+          this.notificationService.showNotification('Feedback updated');
         },
       });
   }
