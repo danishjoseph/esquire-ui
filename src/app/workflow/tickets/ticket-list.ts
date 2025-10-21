@@ -21,7 +21,7 @@ import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-int
 import { FormControl } from '@angular/forms';
 import { debounceTime, map } from 'rxjs';
 import { TicketModal } from './ticket-modal';
-import { ServiceSectionName } from './ticket-reply';
+import { ServiceSectionName } from './ticket-form-service';
 
 export const routeToStatusMap: Record<string, TicketStatus> = {
   'in-progress': TicketStatus.IN_PROGRESS,

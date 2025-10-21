@@ -2,49 +2,22 @@ import { Component, computed, DestroyRef, inject, input, signal } from '@angular
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { EMPTY } from 'rxjs';
-import {
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { TicketResource } from './ticket-resource';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TicketResource, TicketStatus } from './ticket-resource';
 import { DatePipe } from '@angular/common';
 import { AvatarText } from '../../shared/components/avatar/avatar-text';
 import { Button } from '../../shared/components/ui/button';
 import { TextArea } from '../../shared/components/form/basic/text-area';
-import { LogType } from './ticket-form-service';
-import { Select, Option } from '../../shared/components/form/basic/select';
+import {
+  ITicketUpdateForm,
+  LogType,
+  ServiceSectionNameOptions,
+  TicketFormService,
+} from './ticket-form-service';
+import { Select } from '../../shared/components/form/basic/select';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { statusToRouteMap } from './ticket-list';
 import { NotificationService } from '../../shared/components/ui/notification-service';
-
-export interface ITicketReplyForm {
-  id: FormControl<number>;
-  service_log_type: NonNullable<FormControl<string>>;
-  service_log_description: NonNullable<FormControl<string>>;
-  service_section_name: FormControl<ServiceSectionName>;
-  status: FormControl<TicketStatus>;
-}
-
-export enum ServiceSectionName {
-  LAP_CARE = 'LAP_CARE',
-  CHIP_LEVEL = 'CHIP_LEVEL',
-  DESKTOP_CARE = 'DESKTOP_CARE',
-  IPG = 'IPG',
-  VENDOR_ASP = 'VENDOR_ASP',
-  OUTSOURCE = 'OUTSOURCE',
-  HOLD = 'HOLD',
-}
-
-export enum TicketStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  QC = 'QC',
-  DELIVERY_READY = 'DELIVERY_READY',
-  DELIVERED = 'DELIVERED',
-  CLOSED = 'CLOSED',
-}
 
 @Component({
   selector: 'app-ticket-reply',
@@ -174,7 +147,7 @@ export enum TicketStatus {
         </div>
 
         <!-- Reply Box -->
-        <form [formGroup]="form" (ngSubmit)="onReply()">
+        <form [formGroup]="form()" (ngSubmit)="onReply()">
           <div class="pt-5">
             <div
               class="mx-auto w-full rounded-2xl border border-gray-200 shadow-xs dark:border-gray-800 dark:bg-gray-800"
@@ -194,12 +167,12 @@ export enum TicketStatus {
                     id="service_section_name"
                     formControlName="service_section_name"
                     placeholder="Service section name"
-                    [options]="serviceSectionNameOptions"
+                    [options]="SERVICE_SECTION_NAME_OPTIONS"
                   />
                 }
               </div>
               <div class="flex items-center justify-center md:justify-end p-3">
-                <app-button type="submit" [disabled]="form.invalid">
+                <app-button type="submit" [disabled]="form().invalid">
                   {{ buttonText() }}
                 </app-button>
               </div>
@@ -212,6 +185,7 @@ export enum TicketStatus {
 })
 export class TicketReply {
   readonly TICKET_STATUS = TicketStatus;
+  readonly SERVICE_SECTION_NAME_OPTIONS = ServiceSectionNameOptions;
   readonly attachIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path d="M14.4194 11.7679L15.4506 10.7367C17.1591 9.02811 17.1591 6.25802 15.4506 4.54947C13.742 2.84093 10.9719 2.84093 9.2634 4.54947L8.2322 5.58067M11.77 14.4172L10.7365 15.4507C9.02799 17.1592 6.2579 17.1592 4.54935 15.4507C2.84081 13.7422 2.84081 10.9721 4.54935 9.26352L5.58285 8.23002M11.7677 8.23232L8.2322 11.7679" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
   readonly currentPage = input<number>(1);
   readonly totalPages = input<number>(1);
@@ -233,21 +207,15 @@ export class TicketReply {
       : TicketStatus.IN_PROGRESS;
   });
 
-  readonly form = new FormGroup<ITicketReplyForm>({
-    id: new FormControl(),
-    status: new FormControl(),
-    service_log_type: new FormControl(LogType.STATUS_UPDATE, { nonNullable: true }),
-    service_log_description: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    service_section_name: new FormControl(),
-  });
-
   protected ticketResource = inject(TicketResource);
   protected router = inject(Router);
   protected destroyRef = inject(DestroyRef);
   protected notificationService = inject(NotificationService);
+  protected ticketFormService = inject(TicketFormService);
+
+  protected form = computed<FormGroup<ITicketUpdateForm>>(
+    () => this.ticketFormService.ticketUpdateform,
+  );
 
   constructor() {
     const state = this.router.currentNavigation()?.extras.state;
@@ -280,16 +248,6 @@ export class TicketReply {
     if (!serviceSection) return 'Assign Section / Update';
     else return `Move to ${statusToRouteMap[this.nextStatus()]}`;
   });
-
-  readonly serviceSectionNameOptions: Option[] = [
-    { value: ServiceSectionName.LAP_CARE, label: 'Lap Care' },
-    { value: ServiceSectionName.CHIP_LEVEL, label: 'Chip Level' },
-    { value: ServiceSectionName.DESKTOP_CARE, label: 'Desktop Care' },
-    { value: ServiceSectionName.IPG, label: 'IPG' },
-    { value: ServiceSectionName.VENDOR_ASP, label: 'Vendor ASP' },
-    { value: ServiceSectionName.OUTSOURCE, label: 'Outsource' },
-    { value: ServiceSectionName.HOLD, label: 'Hold' },
-  ];
 
   readonly logTypeInfoMap: Record<LogType, { label: string; color: BadgeColor }> = {
     [LogType.DIAGNOSIS]: {
@@ -353,7 +311,7 @@ export class TicketReply {
   ]);
 
   onReply() {
-    const formValue = this.form.getRawValue();
+    const formValue = this.form().getRawValue();
     const workLog = {
       service_log_type: formValue.service_log_type as LogType,
       log_description: formValue.service_log_description,
@@ -369,7 +327,7 @@ export class TicketReply {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         complete: () => {
-          this.form.reset();
+          this.form().reset();
           if (!this.ticketInfo().serviceSection) {
             this.router.navigateByUrl(`/service/tickets/${statusToRouteMap['IN_PROGRESS']}`);
           } else {

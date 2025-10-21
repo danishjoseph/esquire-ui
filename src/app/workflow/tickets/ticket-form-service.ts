@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { PurchaseStatus, ServiceStatus, WarrantyStatus } from './purchase-info-form';
+import { Option } from '../../shared/components/form/basic/select';
 
 export enum LogType {
   DIAGNOSIS = 'DIAGNOSIS',
@@ -25,6 +26,34 @@ export enum ProductCondition {
   VERY_POOR = 'VERY_POOR',
   DAMAGED = 'DAMAGED',
 }
+
+export enum ServiceSectionName {
+  LAP_CARE = 'LAP_CARE',
+  CHIP_LEVEL = 'CHIP_LEVEL',
+  DESKTOP_CARE = 'DESKTOP_CARE',
+  IPG = 'IPG',
+  VENDOR_ASP = 'VENDOR_ASP',
+  OUTSOURCE = 'OUTSOURCE',
+  HOLD = 'HOLD',
+}
+
+export enum TicketStatus {
+  IN_PROGRESS = 'IN_PROGRESS',
+  QC = 'QC',
+  DELIVERY_READY = 'DELIVERY_READY',
+  DELIVERED = 'DELIVERED',
+  CLOSED = 'CLOSED',
+}
+
+export const ServiceSectionNameOptions: Option[] = [
+  { value: ServiceSectionName.LAP_CARE, label: 'Lap Care' },
+  { value: ServiceSectionName.CHIP_LEVEL, label: 'Chip Level' },
+  { value: ServiceSectionName.DESKTOP_CARE, label: 'Desktop Care' },
+  { value: ServiceSectionName.IPG, label: 'IPG' },
+  { value: ServiceSectionName.VENDOR_ASP, label: 'Vendor ASP' },
+  { value: ServiceSectionName.OUTSOURCE, label: 'Outsource' },
+  { value: ServiceSectionName.HOLD, label: 'Hold' },
+];
 
 export interface IWorkLog {
   // created_by: FormControl<string | null>;
@@ -61,6 +90,14 @@ export interface IPurchaseInfo {
   asc_expiry_date?: FormControl<Date | null>;
   service_status?: FormControl<ServiceStatus | null>;
   invoice_number_retype?: FormControl<string | null>;
+}
+
+export interface ITicketUpdateForm {
+  id: FormControl<number>;
+  service_log_type: NonNullable<FormControl<string>>;
+  service_log_description: NonNullable<FormControl<string>>;
+  service_section_name: FormControl<ServiceSectionName>;
+  status: FormControl<TicketStatus>;
 }
 
 export const numberValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
@@ -128,4 +165,15 @@ export class TicketFormService {
     },
     { validators: advanceAmountValidator },
   );
+
+  readonly ticketUpdateform = new FormGroup<ITicketUpdateForm>({
+    id: new FormControl(),
+    status: new FormControl(),
+    service_log_type: new FormControl(LogType.STATUS_UPDATE, { nonNullable: true }),
+    service_log_description: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    service_section_name: new FormControl(),
+  });
 }
