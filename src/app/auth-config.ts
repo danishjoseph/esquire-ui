@@ -12,5 +12,9 @@ export const authConfig: PassedInitialConfig = {
     silentRenew: true,
     useRefreshToken: true,
     renewTimeBeforeTokenExpiresInSeconds: 30,
+    customParamsEndSessionRequest: {
+      client_id: environment.clientId,
+      logout_uri: window.location.origin,
+    },
   },
 };

@@ -2,10 +2,15 @@ import { Component, ElementRef, inject, signal, viewChild } from '@angular/core'
 import { SidebarStore } from './sidebar-store';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { RouterLink } from '@angular/router';
+import { OidcSecurityService } from 'angular-auth-oidc-client';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AvatarText } from '../avatar/avatar-text';
+import { Dropdown } from '../ui/dropdown';
+import { Button } from '../ui/button';
 
 @Component({
   selector: 'app-header',
-  imports: [ThemeToggle, RouterLink],
+  imports: [ThemeToggle, RouterLink, AvatarText, Dropdown, Button],
   template: `
     <header
       class="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 xl:border-b"
@@ -107,6 +112,19 @@ import { RouterLink } from '@angular/router';
             <!-- NotificationDropdown placeholder -->
           </div>
           <!-- UserDropdown placeholder -->
+          <app-dropdown class="relative" className="absolute right-0 z-10">
+            <div dropdown-button>
+              <app-avatar-text [name]="userData()?.email" />
+            </div>
+            <div dropdown-content>
+              <span class="text-theme-sm block font-medium text-gray-700 dark:text-gray-400">
+                {{ userData()?.email }}
+              </span>
+              <app-button variant="transparent" className="rounded-lg w-full" (btnClick)="logout()">
+                Log Out
+              </app-button>
+            </div>
+          </app-dropdown>
         </div>
       </div>
     </header>
@@ -119,6 +137,9 @@ export class Header {
   readonly applicationMenu = signal(false);
   protected sidebarStore = inject(SidebarStore);
   protected searchInput = viewChild('searchInput', { read: ElementRef });
+  protected oidc = inject(OidcSecurityService);
+
+  protected userData = toSignal(this.oidc.getUserData(), { initialValue: null });
 
   readonly isExpanded = this.sidebarStore.isExpanded;
   readonly isMobileOpen = this.sidebarStore.isMobileOpen;
@@ -145,5 +166,9 @@ export class Header {
 
   removeFocus() {
     this.searchInput()?.nativeElement.blur();
+  }
+
+  logout(): void {
+    this.oidc.logoff().subscribe();
   }
 }
