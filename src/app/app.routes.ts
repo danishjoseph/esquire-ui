@@ -8,6 +8,7 @@ import { TicketAdd } from './workflow/tickets/ticket-add';
 import { TicketList } from './workflow/tickets/ticket-list';
 import { TicketReply } from './workflow/tickets/ticket-reply';
 import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
+import { InvoiceList } from './invoices/invoice-list';
 
 export const routes: Routes = [
   {
@@ -37,6 +38,12 @@ export const routes: Routes = [
         component: ProductList,
         pathMatch: 'full',
         title: 'Products | Esquire',
+      },
+      {
+        path: 'invoices',
+        component: InvoiceList,
+        pathMatch: 'full',
+        title: 'Invoices | Esquire',
       },
       {
         path: 'service',

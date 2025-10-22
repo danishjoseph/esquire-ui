@@ -216,6 +216,9 @@ export class PurchaseInfoForm {
           this.updateInvoiceNumberRetype(status);
         });
     });
+    this.destroyRef.onDestroy(() => {
+      this.form().reset();
+    });
   }
 
   private updateInvoiceNumberRetype(status: ServiceStatus | null) {
