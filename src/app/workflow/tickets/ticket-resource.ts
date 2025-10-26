@@ -173,6 +173,10 @@ interface ServiceLogs {
       accessory_name: string;
       accessory_received: boolean;
       created_at: Date;
+      created_by: {
+        name: string | null;
+        role: string | null;
+      } | null;
     },
   ];
   service_logs: [
@@ -180,6 +184,15 @@ interface ServiceLogs {
       service_log_type: LogType;
       log_description: string;
       created_at: Date;
+      updated_at: Date;
+      created_by: {
+        name: string | null;
+        role: string | null;
+      } | null;
+      updated_by: {
+        name: string | null;
+        role: string | null;
+      } | null;
     },
   ];
   status: TicketStatus;
@@ -325,6 +338,11 @@ const GET_LOGS = gql<{ service: ServiceLogs }, number>`
       accessories {
         accessory_name
         accessory_received
+        created_at
+        created_by {
+          name
+          role
+        }
       }
       serviceSection: service_section {
         id
@@ -334,6 +352,15 @@ const GET_LOGS = gql<{ service: ServiceLogs }, number>`
         service_log_type
         log_description
         created_at
+        updated_at
+        created_by {
+          name
+          role
+        }
+        updated_by {
+          name
+          role
+        }
       }
       status
       created_at

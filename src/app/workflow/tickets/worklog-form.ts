@@ -159,6 +159,6 @@ export class WorklogForm {
   }
 
   handleFormSubmit() {
-    console.log('form values', this.form().value, 'valid', this.form().valid);
+    console.log('handleFormSubmit');
   }
 }

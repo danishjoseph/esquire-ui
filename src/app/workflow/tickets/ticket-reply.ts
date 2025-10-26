@@ -294,17 +294,17 @@ export class TicketReply {
   protected messages = computed(() => [
     ...(this.serviceLogs()?.accessories || []).map((item) => ({
       ...item,
-      userName: 'Test User1',
-      role: 'FOE',
+      userName: item.created_by?.name || '-',
+      role: item.created_by?.role,
       time: item.created_at,
       type: LogType.DIAGNOSIS,
       content: `Accessories Attached: ${item.accessory_name}`,
     })),
     ...(this.serviceLogs()?.service_logs || []).map((item) => ({
       ...item,
-      userName: 'Test User2',
-      role: 'Executive',
-      time: item.created_at,
+      userName: item.updated_by?.name || '-',
+      role: item.updated_by?.role,
+      time: item.updated_at,
       type: item.service_log_type,
       content: `${item.log_description}`,
     })),
