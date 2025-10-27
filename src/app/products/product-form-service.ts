@@ -9,6 +9,7 @@ export interface IProductForm {
   category: NonNullable<FormControl<ProductCategory>>;
   brand: NonNullable<FormControl<string>>;
   model_name: FormControl<string>;
+  product_warranty: FormControl<string>;
 }
 
 @Injectable({
@@ -28,5 +29,6 @@ export class ProductFormService {
     }),
     brand: new FormControl('', { nonNullable: true, validators: Validators.required }),
     model_name: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    product_warranty: new FormControl('', { nonNullable: true, validators: Validators.required }),
   });
 }

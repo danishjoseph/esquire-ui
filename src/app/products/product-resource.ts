@@ -36,6 +36,7 @@ export interface Product {
   name: string;
   brand?: string;
   model_name?: string;
+  product_warranty?: string;
   created_at: Date;
   updated_at: Date;
   customer?: Customer;
@@ -48,6 +49,7 @@ export interface ProductList {
   name: Product['category'];
   modelName?: Product['model_name'];
   brand?: Product['brand'];
+  product_warranty?: Product['product_warranty'];
 }
 
 interface ProductsRequest {
@@ -85,6 +87,7 @@ const PRODUCT = gql`
     category
     brand
     model_name
+    product_warranty
   }
 `;
 
@@ -96,6 +99,7 @@ const LIST_PRODUCTS = gql`
     modelName: model_name
     serialNumber: serial_number
     brand
+    product_warranty
   }
 `;
 

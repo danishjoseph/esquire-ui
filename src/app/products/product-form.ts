@@ -89,6 +89,14 @@ export const productCategoryOptions: Option[] = [
               formControlName="serial_number"
             />
           </div>
+          <div class="col-span-1 sm:col-span-2">
+            <app-input
+              id="product_warranty"
+              label="Product Warranty"
+              placeholder="Product Warranty"
+              formControlName="product_warranty"
+            />
+          </div>
         </div>
 
         @if (!formGroup()) {

@@ -38,6 +38,11 @@ import { NotificationService } from '../shared/components/ui/notification-servic
           <th
             class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start"
           >
+            Product Warranty
+          </th>
+          <th
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start"
+          >
             Action
           </th>
         </tr>
@@ -71,6 +76,9 @@ import { NotificationService } from '../shared/components/ui/notification-servic
               <span class="text-gray-500 text-theme-sm dark:text-gray-400">
                 {{ row.modelName }}
               </span>
+            </td>
+            <td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">
+              {{ row.product_warranty ? row.product_warranty : '-' }}
             </td>
             <td class="px-4 sm:px-6 py-3.5">
               <span class="flex items-center w-full gap-4">

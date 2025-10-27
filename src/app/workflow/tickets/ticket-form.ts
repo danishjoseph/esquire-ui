@@ -200,6 +200,7 @@ export class TicketForm {
       model_name: product.modelName,
       category: product.category,
       brand: product.brand,
+      product_warranty: product.product_warranty,
     });
     this.productSearch$.reset();
     this.form.controls.product.disable();
@@ -251,7 +252,6 @@ export class TicketForm {
   }
 
   toCreateRequest(form: FormGroup<ITicketForm>['value']): CreateServiceInput {
-    console.log('form', form);
     const { purchase, product, customer, worklog, serviceCharge } = form;
     if (product?.id === null) {
       delete product.id;
