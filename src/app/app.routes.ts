@@ -9,6 +9,7 @@ import { TicketList } from './workflow/tickets/ticket-list';
 import { TicketReply } from './workflow/tickets/ticket-reply';
 import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
 import { InvoiceList } from './invoices/invoice-list';
+import { UserList } from './settings/users/user-list';
 
 export const routes: Routes = [
   {
@@ -70,6 +71,17 @@ export const routes: Routes = [
             component: TicketReply,
             pathMatch: 'full',
             title: 'Feedback Log | Esquire',
+          },
+        ],
+      },
+      {
+        path: 'settings',
+        children: [
+          {
+            path: 'users',
+            pathMatch: 'full',
+            component: UserList,
+            title: 'Manage Users | Esquire',
           },
         ],
       },
