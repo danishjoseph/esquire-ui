@@ -56,6 +56,7 @@ export interface CreateServiceInput {
   };
   purchase_id?: string;
   service_logs: IWorkLog[];
+  service_section: ServiceSectionName | null;
 }
 
 interface UpdateServiceInput {
@@ -163,6 +164,9 @@ export interface TicketView {
       log_description: string;
     },
   ];
+  service_section: {
+    service_section_name: ServiceSectionName;
+  };
 }
 
 interface ServiceLogs {
@@ -266,6 +270,9 @@ const TICKET = gql`
     service_logs {
       service_log_type
       log_description
+    }
+    service_section {
+      service_section_name
     }
   }
 `;

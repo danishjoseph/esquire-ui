@@ -17,43 +17,7 @@ import { TicketFormService, IServiceCharge } from './ticket-form-service';
   imports: [ReactiveFormsModule, Input],
   template: `
     <form [formGroup]="form()" (ngSubmit)="handleFormSubmit()">
-      <h4 class="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">Summary of Charges</h4>
-
       <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-        <div class="col-span-1">
-          <app-input
-            type="tel"
-            id="quotation_amount"
-            label="Qutation Amount"
-            placeholder="Amount Quoted"
-            formControlName="quotation_amount"
-            [error]="
-              !!(
-                form().get('quotation_amount')?.errors &&
-                (form().get('quotation_amount')?.touched || form().get('quotation_amount')?.dirty)
-              )
-            "
-          />
-        </div>
-
-        @if (ticketId()) {
-          <div class="col-span-1">
-            <app-input
-              type="tel"
-              id="service_charge"
-              label="Service Charge"
-              placeholder="Service Charges"
-              formControlName="service_charge"
-              [error]="
-                !!(
-                  form().get('service_charge')?.errors &&
-                  (form().get('service_charge')?.touched || form().get('service_charge')?.dirty)
-                )
-              "
-            />
-          </div>
-        }
-
         <div class="col-span-1">
           <app-input
             type="tel"
@@ -75,19 +39,52 @@ import { TicketFormService, IServiceCharge } from './ticket-form-service';
           />
         </div>
 
-        <div class="col-span-1">
-          <app-input
-            type="tel"
-            id="total_amount"
-            label="Total Amount"
-            placeholder="Total Charges"
-            formControlName="total_amount"
-          />
-        </div>
+        @if (ticketId()) {
+          <div class="col-span-1">
+            <app-input
+              type="tel"
+              id="service_charge"
+              label="Service Charge"
+              placeholder="Service Charges"
+              formControlName="service_charge"
+              [error]="
+                !!(
+                  form().get('service_charge')?.errors &&
+                  (form().get('service_charge')?.touched || form().get('service_charge')?.dirty)
+                )
+              "
+            />
+          </div>
+          <div class="col-span-1">
+            <app-input
+              type="tel"
+              id="quotation_amount"
+              label="Qutation Amount"
+              placeholder="Amount Quoted"
+              formControlName="quotation_amount"
+              [error]="
+                !!(
+                  form().get('quotation_amount')?.errors &&
+                  (form().get('quotation_amount')?.touched || form().get('quotation_amount')?.dirty)
+                )
+              "
+            />
+          </div>
 
-        <div class="col-span-1">
-          <app-input id="gst_amount" label="GST Charges (18%)" formControlName="gst_amount" />
-        </div>
+          <div class="col-span-1">
+            <app-input
+              type="tel"
+              id="total_amount"
+              label="Total Amount"
+              placeholder="Total Charges"
+              formControlName="total_amount"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <app-input id="gst_amount" label="GST Charges (18%)" formControlName="gst_amount" />
+          </div>
+        }
       </div>
     </form>
   `,

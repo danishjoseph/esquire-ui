@@ -106,26 +106,6 @@ export const numberValidator: ValidatorFn = (control: AbstractControl): Validati
   return !isNaN(value) && parseFloat(value) >= 0 ? null : { notNumber: true };
 };
 
-export const advanceAmountValidator: ValidatorFn = (
-  control: AbstractControl,
-): ValidationErrors | null => {
-  const quotationAmountControl = control.get('quotation_amount');
-  const advanceAmountControl = control.get('advance_amount');
-
-  if (!quotationAmountControl || !advanceAmountControl) {
-    return null;
-  }
-
-  const quotationAmount = parseFloat(quotationAmountControl.value);
-  const advanceAmount = parseFloat(advanceAmountControl.value);
-
-  if (isNaN(quotationAmount) || isNaN(advanceAmount)) {
-    return null;
-  }
-
-  return advanceAmount > quotationAmount ? { advanceAmountTooHigh: true } : null;
-};
-
 @Injectable({
   providedIn: 'root',
 })
@@ -146,25 +126,25 @@ export class TicketFormService {
     }),
   });
 
-  readonly serviceChargeForm = new FormGroup<IServiceCharge>(
-    {
-      quotation_amount: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, numberValidator],
-      }),
-      service_charge: new FormControl('0', { nonNullable: true, validators: [numberValidator] }),
-      advance_amount: new FormControl('', { nonNullable: true, validators: [numberValidator] }),
-      total_amount: new FormControl(
-        { value: '0', disabled: true },
-        { nonNullable: true, validators: [numberValidator] },
-      ),
-      gst_amount: new FormControl(
-        { value: '0', disabled: true },
-        { nonNullable: true, validators: [numberValidator] },
-      ),
-    },
-    { validators: advanceAmountValidator },
-  );
+  readonly serviceChargeForm = new FormGroup<IServiceCharge>({
+    quotation_amount: new FormControl('0', {
+      nonNullable: true,
+      validators: [numberValidator],
+    }),
+    service_charge: new FormControl('0', { nonNullable: true, validators: [numberValidator] }),
+    advance_amount: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, numberValidator],
+    }),
+    total_amount: new FormControl(
+      { value: '0', disabled: true },
+      { nonNullable: true, validators: [numberValidator] },
+    ),
+    gst_amount: new FormControl(
+      { value: '0', disabled: true },
+      { nonNullable: true, validators: [numberValidator] },
+    ),
+  });
 
   readonly ticketUpdateform = new FormGroup<ITicketUpdateForm>({
     id: new FormControl(),
