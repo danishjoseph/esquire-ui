@@ -19,6 +19,11 @@ import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { statusToRouteMap } from './ticket-list';
 import { NotificationService } from '../../shared/components/ui/notification-service';
 
+export enum ReplyType {
+  STATUS_UPDATE = 'STATUS_UPDATE',
+  SECTION_UPDATE = 'SECTION_UPDATE',
+}
+
 @Component({
   selector: 'app-ticket-reply',
   imports: [
@@ -59,55 +64,9 @@ import { NotificationService } from '../../shared/components/ui/notification-ser
             {{ serviceLogs()?.created_at | date: 'short' }}
           </p>
         </div>
-        <div class="flex items-center gap-4">
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ currentPage() }} of {{ totalPages() }}
-          </p>
-          <div class="flex items-center gap-2">
-            <button
-              class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-white/90"
-            >
-              <!-- Prev Icon -->
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                class="stroke-current"
-              >
-                <path
-                  d="M12.7083 5L7.5 10.2083L12.7083 15.4167"
-                  stroke=""
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></path>
-              </svg>
-            </button>
-            <button
-              class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-white/90"
-            >
-              <!-- Next Icon -->
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                class="stroke-current"
-              >
-                <path
-                  d="M7.29167 15.8335L12.5 10.6252L7.29167 5.41683"
-                  stroke=""
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></path>
-              </svg>
-            </button>
-          </div>
-        </div>
+        <app-button size="xs" variant="outline" [startIcon]="backIcon" (btnClick)="goBack()">
+          Back
+        </app-button>
       </div>
 
       <!-- Messages -->
@@ -162,11 +121,11 @@ import { NotificationService } from '../../shared/components/ui/notification-ser
                 <app-button size="xs" variant="transparent" [startIcon]="attachIcon">
                   Attach
                 </app-button>
-                @if (!ticketInfo().serviceSection) {
+                @if (ticketInfo().type === REPLY_TYPE.SECTION_UPDATE) {
                   <app-select
                     id="service_section_name"
                     formControlName="service_section_name"
-                    placeholder="Service section name"
+                    placeholder="Assign Service Section"
                     [options]="SERVICE_SECTION_NAME_OPTIONS"
                   />
                 }
@@ -184,13 +143,20 @@ import { NotificationService } from '../../shared/components/ui/notification-ser
   `,
 })
 export class TicketReply {
+  readonly REPLY_TYPE = ReplyType;
   readonly TICKET_STATUS = TicketStatus;
   readonly SERVICE_SECTION_NAME_OPTIONS = ServiceSectionNameOptions;
   readonly attachIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path d="M14.4194 11.7679L15.4506 10.7367C17.1591 9.02811 17.1591 6.25802 15.4506 4.54947C13.742 2.84093 10.9719 2.84093 9.2634 4.54947L8.2322 5.58067M11.77 14.4172L10.7365 15.4507C9.02799 17.1592 6.2579 17.1592 4.54935 15.4507C2.84081 13.7422 2.84081 10.9721 4.54935 9.26352L5.58285 8.23002M11.7677 8.23232L8.2322 11.7679" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+  readonly backIcon = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="stroke-current"><path d="M12.7083 5L7.5 10.2083L12.7083 15.4167" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
   readonly currentPage = input<number>(1);
   readonly totalPages = input<number>(1);
 
-  readonly ticketInfo = signal({ ticketId: null, currentStatus: null, serviceSection: null });
+  readonly ticketInfo = signal({
+    ticketId: null,
+    currentStatus: null,
+    serviceSection: null,
+    type: null,
+  });
 
   readonly nextStatus = computed(() => {
     const statusOrder = [
@@ -220,12 +186,14 @@ export class TicketReply {
   constructor() {
     const state = this.router.currentNavigation()?.extras.state;
     if (state && typeof state === 'object' && 'ticketId' in state && 'currentStatus' in state) {
-      const { ticketId, currentStatus, serviceSection } = state;
+      const { ticketId, currentStatus, serviceSection, type } = state;
       this.ticketInfo.set({
         ticketId,
         currentStatus,
         serviceSection,
+        type,
       });
+      this.form().controls.service_section_name.setValue(serviceSection);
     } else {
       this.router.navigate(['service/tickets']);
     }
@@ -244,8 +212,8 @@ export class TicketReply {
   });
 
   protected buttonText = computed(() => {
-    const { serviceSection } = this.ticketInfo();
-    if (!serviceSection) return 'Assign Section / Update';
+    const { type } = this.ticketInfo();
+    if (type === ReplyType.SECTION_UPDATE) return 'Update';
     else return `Move to ${statusToRouteMap[this.nextStatus()]}`;
   });
 
@@ -318,7 +286,10 @@ export class TicketReply {
     };
     const serviceData = {
       id: this.ticketInfo().ticketId as unknown as number,
-      status: this.nextStatus(),
+      status:
+        this.ticketInfo().type === this.REPLY_TYPE.STATUS_UPDATE
+          ? this.nextStatus()
+          : TicketStatus.IN_PROGRESS,
       service_logs: [workLog],
       service_section_name: formValue.service_section_name,
     };
@@ -328,13 +299,21 @@ export class TicketReply {
       .subscribe({
         complete: () => {
           this.form().reset();
-          if (!this.ticketInfo().serviceSection) {
-            this.router.navigateByUrl(`/service/tickets/${statusToRouteMap['IN_PROGRESS']}`);
+          if (this.ticketInfo().type === ReplyType.SECTION_UPDATE) {
+            this.router.navigateByUrl(
+              `/service/tickets/${statusToRouteMap[this.ticketInfo().currentStatus || TicketStatus.IN_PROGRESS]}`,
+            );
           } else {
             this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
           }
           this.notificationService.showNotification('Feedback updated');
         },
       });
+  }
+
+  goBack() {
+    this.router.navigateByUrl(
+      `/service/tickets/${statusToRouteMap[this.ticketInfo().currentStatus || TicketStatus.IN_PROGRESS]}`,
+    );
   }
 }

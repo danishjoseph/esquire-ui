@@ -22,6 +22,7 @@ import { FormControl } from '@angular/forms';
 import { debounceTime, map } from 'rxjs';
 import { TicketModal } from './ticket-modal';
 import { ServiceSectionName } from './ticket-form-service';
+import { ReplyType } from './ticket-reply';
 
 export const routeToStatusMap: Record<string, TicketStatus> = {
   'in-progress': TicketStatus.IN_PROGRESS,
@@ -176,6 +177,14 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                           >
                             View More
                           </button>
+                          @if (item.status === TICKET_STATUS.IN_PROGRESS) {
+                            <button
+                              class="text-sm flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                              (click)="handleUpdateSection(item)"
+                            >
+                              Update Section
+                            </button>
+                          }
                           @if (item.status !== TICKET_STATUS.CLOSED) {
                             <button
                               class="text-sm flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
@@ -261,7 +270,6 @@ export class TicketList {
   });
 
   openModal(id: string) {
-    console.log('id', id);
     this.ticketId.set(id);
     this.isOpen.set(true);
   }
@@ -278,6 +286,18 @@ export class TicketList {
   handleUpdate(item: TicketTable) {
     this.router.navigate(['/service/reply'], {
       state: {
+        type: ReplyType.STATUS_UPDATE,
+        ticketId: item.id,
+        currentStatus: this.selectedTab(),
+        serviceSection: item.serviceSection?.name,
+      },
+    });
+  }
+
+  handleUpdateSection(item: TicketTable) {
+    this.router.navigate(['/service/reply'], {
+      state: {
+        type: ReplyType.SECTION_UPDATE,
         ticketId: item.id,
         currentStatus: this.selectedTab(),
         serviceSection: item.serviceSection?.name,
