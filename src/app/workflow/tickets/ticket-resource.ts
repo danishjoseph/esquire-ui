@@ -219,8 +219,10 @@ export interface TicketTable {
   };
   createdAt: Date;
   serviceSection: { id: string; name: ServiceSectionName } | null;
-  assignedExecutive: null;
   status: TicketStatus;
+  updated_by?: {
+    name: string | null;
+  };
 }
 
 const TICKET = gql`
@@ -296,6 +298,9 @@ const TICKET_TABLE = gql`
       name: service_section_name
     }
     status
+    updated_by {
+      name
+    }
   }
 `;
 

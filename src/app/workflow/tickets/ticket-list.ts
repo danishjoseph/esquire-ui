@@ -81,7 +81,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400 hidden sm:table-cell"
                   >
-                    createdAt
+                    Created At
                   </th>
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
@@ -91,7 +91,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400 hidden sm:table-cell"
                   >
-                    Executive Name
+                    Last Update By
                   </th>
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
@@ -147,7 +147,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                     <td
                       class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400 hidden sm:table-cell"
                     >
-                      {{ item.assignedExecutive ?? '-' }}
+                      {{ item.updated_by?.name ?? '-' }}
                     </td>
                     <td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
                       <app-dropdown class="relative" className="absolute right-0 z-10 w-40">
