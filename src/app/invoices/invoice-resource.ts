@@ -27,6 +27,7 @@ interface PurchasesRequest {
   offset: number;
   limit: number;
   search: string;
+  customerId?: number | null;
 }
 
 interface PurchaseResponse {
@@ -54,15 +55,20 @@ const PURCHASE = gql`
     warranty_status
     invoice_number
     product {
+      id
       name
+      serial_number
+      category
+      brand
       model_name
+      product_warranty
     }
   }
 `;
 
 const PURCHASES = gql<PurchaseResponse, PurchasesRequest>`
-  query Invoices($limit: Int, $offset: Int, $search: String) {
-    purchases(limit: $limit, offset: $offset, search: $search) {
+  query Invoices($limit: Int, $offset: Int, $search: String, $customerId: Int) {
+    purchases(limit: $limit, offset: $offset, search: $search, customerId: $customerId) {
       ...Purchase
     }
   }
@@ -131,11 +137,17 @@ export class InvoiceResource {
   #purchasesRef?: QueryRef<PurchaseResponse, PurchasesRequest>;
   #purchasesRequestState = signal<PurchasesRequest | null>(null);
 
-  invoices(limit: number, offset: number, search: string) {
-    this.#purchasesRequestState.set({ limit, offset, search });
+  invoices(limit: number, offset: number, search: string, customerId?: number | null) {
+    const requestState: PurchasesRequest = {
+      limit,
+      offset,
+      search,
+      customerId: customerId ?? null,
+    };
+    this.#purchasesRequestState.set(requestState);
     this.#purchasesRef = this.#apollo.watchQuery({
       query: PURCHASES,
-      variables: { offset, limit, search },
+      variables: requestState,
       fetchPolicy: 'cache-and-network',
     });
     return this.#purchasesRef?.valueChanges.pipe(map((res) => res.data));

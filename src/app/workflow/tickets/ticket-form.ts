@@ -1,4 +1,4 @@
-import { afterRenderEffect, Component, DestroyRef, inject, input } from '@angular/core';
+import { afterRenderEffect, Component, computed, DestroyRef, inject, input } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ServiceChargeForm } from './service-charge-form';
 import { WorklogForm } from './worklog-form';
@@ -26,10 +26,10 @@ import { CustomerFormService } from '../../customers/customer-form-service';
 import { CustomerForm } from '../../customers/customer-form';
 import { Dropdown } from '../../shared/components/ui/dropdown';
 import { Customer, CustomerResource } from '../../customers/customer-resource';
-import { ProductList, ProductResource } from '../../products/product-resource';
 import { SearchInput } from '../../shared/components/form/search-input';
 import { NotificationService } from '../../shared/components/ui/notification-service';
 import { Select } from '../../shared/components/form/basic/select';
+import { InvoiceResource, Purchase } from '../../invoices/invoice-resource';
 
 export interface ITicketForm {
   product: FormGroup<IProductForm>;
@@ -86,6 +86,15 @@ export interface ITicketForm {
                         </li>
                       }
                     </ul>
+                  } @else {
+                    <li
+                      class="flex items-center gap-2 border-b border-gray-200 px-3 py-2.5 text-sm text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-400 cursor-pointer"
+                    >
+                      <span
+                        class="ml-2 block h-[3px] w-[3px] rounded-full bg-gray-500 dark:bg-gray-400"
+                      ></span
+                      ><span> No Results </span>
+                    </li>
                   }
                 </div>
               </app-dropdown>
@@ -98,27 +107,38 @@ export interface ITicketForm {
             <div class="flex justify-end">
               <app-dropdown class="relative" className="absolute w-full">
                 <div dropdown-button>
-                  <app-search-input placeholder="Search Product" [formControl]="productSearch$" />
+                  <app-search-input placeholder="Search Product" [formControl]="purchaseSearch$" />
                 </div>
                 <div dropdown-content class="max-h-40 overflow-y-auto">
-                  @if (products.hasValue() && products.value().products.length) {
+                  @if (invoices.hasValue() && invoices.value().purchases.length) {
                     <ul>
-                      @for (product of products.value().products; track $index) {
+                      @for (purchase of invoices.value().purchases; track $index) {
                         <li
                           class="flex items-center gap-2 border-b border-gray-200 px-3 py-2.5 text-sm text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-400 cursor-pointer"
-                          (click)="handleProductClick(product)"
-                          (keydown.enter)="handleProductClick(product)"
-                          (keydown.space)="handleProductClick(product)"
+                          (click)="handlePurchaseClick(purchase)"
+                          (keydown.enter)="handlePurchaseClick(purchase)"
+                          (keydown.space)="handlePurchaseClick(purchase)"
                           tabindex="0"
                           role="button"
                         >
                           <span
                             class="ml-2 block h-[3px] w-[3px] rounded-full bg-gray-500 dark:bg-gray-400"
                           ></span
-                          ><span> {{ product.name }} ({{ product.serialNumber }})</span>
+                          ><span>
+                            {{ purchase.product.name }} ({{ purchase.product.serial_number }})</span
+                          >
                         </li>
                       }
                     </ul>
+                  } @else {
+                    <li
+                      class="flex items-center gap-2 border-b border-gray-200 px-3 py-2.5 text-sm text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-400 cursor-pointer"
+                    >
+                      <span
+                        class="ml-2 block h-[3px] w-[3px] rounded-full bg-gray-500 dark:bg-gray-400"
+                      ></span
+                      ><span> No Results </span>
+                    </li>
                   }
                 </div>
               </app-dropdown>
@@ -178,16 +198,25 @@ export class TicketForm {
   protected productFormService = inject(ProductFormService);
   private destroyRef = inject(DestroyRef);
   protected customerResource = inject(CustomerResource);
-  protected productResource = inject(ProductResource);
+  protected invoiceResource = inject(InvoiceResource);
   protected notificationService = inject(NotificationService);
+
+  readonly form = new FormGroup<ITicketForm>({
+    product: this.productFormService.productForm,
+    customer: this.customerFormService.customerForm,
+    purchase: this.ticketFormService.purchaseInfoForm,
+    worklog: this.ticketFormService.worklogForm,
+    serviceCharge: this.ticketFormService.serviceChargeForm,
+    serviceSection: new FormControl(null, [Validators.required]),
+  });
 
   protected customerSearch$ = new FormControl('', { nonNullable: true });
   protected customerSearch = toSignal(this.customerSearch$.valueChanges.pipe(debounceTime(500)), {
     initialValue: '',
   });
 
-  protected productSearch$ = new FormControl('', { nonNullable: true });
-  protected productSearch = toSignal(this.productSearch$.valueChanges.pipe(debounceTime(500)), {
+  protected purchaseSearch$ = new FormControl('', { nonNullable: true });
+  protected purchaseSearch = toSignal(this.purchaseSearch$.valueChanges.pipe(debounceTime(500)), {
     initialValue: '',
   });
 
@@ -196,29 +225,36 @@ export class TicketForm {
     stream: ({ params }) => this.customerResource.customers(10, 0, params),
   });
 
-  protected products = rxResource({
-    params: () => this.productSearch(),
-    stream: ({ params }) => this.productResource.products(10, 0, params),
+  customerId = toSignal(this.form.controls.customer.controls.id.valueChanges, {
+    initialValue: null,
+  });
+
+  protected invoiceRequest = computed(() => ({
+    search: this.purchaseSearch(),
+    customerId: this.customerId(),
+  }));
+
+  protected invoices = rxResource({
+    params: () => this.invoiceRequest(),
+    stream: ({ params }) => this.invoiceResource.invoices(10, 0, params.search, params.customerId),
   });
 
   protected handleCustomerClick(customer: Customer) {
     this.form.controls.customer.patchValue(customer);
     this.customerSearch$.reset();
     this.form.controls.customer.disable();
+    this.form.controls.product.reset();
+    this.form.controls.product.enable();
+    this.form.controls.purchase.reset();
+    this.form.controls.purchase.enable();
   }
 
-  protected handleProductClick(product: ProductList) {
-    this.form.controls.product.patchValue({
-      id: product.id,
-      name: product.name,
-      serial_number: product.serialNumber,
-      model_name: product.modelName,
-      category: product.category,
-      brand: product.brand,
-      product_warranty: product.product_warranty,
-    });
-    this.productSearch$.reset();
+  protected handlePurchaseClick(purchase: Purchase) {
+    this.form.controls.purchase.patchValue(purchase);
+    this.form.controls.product.patchValue(purchase.product);
+    this.purchaseSearch$.reset();
     this.form.controls.product.disable();
+    this.form.controls.purchase.disable();
   }
 
   clear() {
@@ -247,15 +283,6 @@ export class TicketForm {
       this.clear();
     });
   }
-
-  readonly form = new FormGroup<ITicketForm>({
-    product: this.productFormService.productForm,
-    customer: this.customerFormService.customerForm,
-    purchase: this.ticketFormService.purchaseInfoForm,
-    worklog: this.ticketFormService.worklogForm,
-    serviceCharge: this.ticketFormService.serviceChargeForm,
-    serviceSection: new FormControl(null, [Validators.required]),
-  });
 
   openTicket() {
     const request = this.toCreateRequest(this.form.getRawValue());
