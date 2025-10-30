@@ -23,7 +23,10 @@ export enum TicketStatus {
 }
 
 interface ListResponse {
-  services: TicketTable[];
+  services: {
+    services: TicketTable[];
+    total: number;
+  };
 }
 
 interface TicketResponse {
@@ -307,7 +310,10 @@ const TICKET_TABLE = gql`
 const TICKETS = gql<ListResponse, TicketsRequest>`
   query services($limit: Int, $offset: Int, $status: TicketStatus, $search: String) {
     services(limit: $limit, offset: $offset, status: $status, search: $search) {
-      ...TicketTable
+      total
+      services {
+        ...TicketTable
+      }
     }
   }
   ${TICKET_TABLE}

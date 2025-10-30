@@ -23,6 +23,7 @@ import { debounceTime, map } from 'rxjs';
 import { TicketModal } from './ticket-modal';
 import { ServiceSectionName } from './ticket-form-service';
 import { ReplyType } from './ticket-reply';
+import { Pagination } from '../../shared/components/ui/pagination';
 
 export const routeToStatusMap: Record<string, TicketStatus> = {
   'in-progress': TicketStatus.IN_PROGRESS,
@@ -52,6 +53,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
     Card,
     DatePipe,
     TicketModal,
+    Pagination,
   ],
   template: `
     <app-page-breadcrumb pageTitle="Support Tickets" />
@@ -61,7 +63,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
         <app-tab-group [options]="ticketStatusOptions" [(selected)]="selectedTab" />
       </div>
       <div class="overflow-x-auto custom-scrollbar">
-        @if (resource.hasValue() && resource.value().services.length) {
+        @if (tickets().length) {
           <div class="overflow-y-auto h-[50vh]">
             <table class="w-full table-auto">
               <thead
@@ -207,6 +209,13 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
           </div>
         }
       </div>
+      <div class="flex justify-center border-t border-gray-100 dark:border-white/[0.05]">
+        <app-pagination
+          [totalPages]="totalPages()"
+          [currentPage]="currentPage()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
     </app-card>
     <app-ticket-modal [ticketId]="ticketId()" [isOpen]="isOpen()" (closed)="closeModal()" />
   `,
@@ -221,7 +230,18 @@ export class TicketList {
   readonly selectedTab = model(TicketStatus.IN_PROGRESS);
   protected TICKET_STATUS = TicketStatus;
 
+  #currentPage = signal(1);
   #limit = 10;
+
+  protected currentPage = this.#currentPage.asReadonly();
+
+  protected totalPages = computed(() => {
+    if (this.resource.hasValue()) {
+      const total = this.resource.value().services.total;
+      return Math.ceil(total / this.#limit);
+    }
+    return 1;
+  });
 
   protected search$ = new FormControl('', { nonNullable: true });
   protected search = toSignal(this.search$.valueChanges.pipe(debounceTime(500)), {
@@ -257,14 +277,16 @@ export class TicketList {
   }
 
   protected resource = rxResource({
-    params: () => ({ search: this.search(), status: this.selectedTab() }),
-    stream: ({ params }) =>
-      this.ticketResource.tickets(this.#limit, 0, params.status, params.search),
+    params: () => ({ search: this.search(), status: this.selectedTab(), page: this.currentPage() }),
+    stream: ({ params }) => {
+      const offset = (params.page - 1) * this.#limit;
+      return this.ticketResource.tickets(this.#limit, offset, params.status, params.search);
+    },
   });
 
   tickets = computed(() => {
     if (this.resource.hasValue()) {
-      return this.resource.value().services;
+      return this.resource.value().services.services;
     }
     return [];
   });
@@ -303,6 +325,10 @@ export class TicketList {
         serviceSection: item.serviceSection?.name,
       },
     });
+  }
+
+  onPageChange(page: number) {
+    this.#currentPage.set(page);
   }
 
   protected ticketStatusOptions: KeyValue<string, string>[] = [
