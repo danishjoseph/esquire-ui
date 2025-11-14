@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { SafeHtmlPipe } from '../../pipe/safe-html-pipe';
 
 export type BadgeVariant = 'light' | 'solid';
@@ -12,11 +12,25 @@ export type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 
   template: `
     <span class="flex" [ngClass]="baseStyles + ' ' + sizeClass() + ' ' + colorStyles()">
       @if (startIcon()) {
-        <span class="mr-1" [innerHTML]="startIcon() | appSafeHtml"></span>
+        <span
+          class="mr-1 cursor-pointer"
+          [innerHTML]="startIcon() | appSafeHtml"
+          tabindex="0"
+          (click)="iconClick.emit($event)"
+          (keydown.enter)="iconClick.emit($event)"
+          (keydown.space)="iconClick.emit($event)"
+        ></span>
       }
       <ng-content></ng-content>
       @if (endIcon()) {
-        <span class="ml-1" [innerHTML]="endIcon() | appSafeHtml"></span>
+        <span
+          class="ml-1 cursor-pointer"
+          [innerHTML]="endIcon() | appSafeHtml"
+          tabindex="0"
+          (click)="iconClick.emit($event)"
+          (keydown.enter)="iconClick.emit($event)"
+          (keydown.space)="iconClick.emit($event)"
+        ></span>
       }
     </span>
   `,
@@ -27,6 +41,7 @@ export class Badge {
   readonly color = input<BadgeColor>();
   readonly startIcon = input<string>(''); // SVG or HTML string
   readonly endIcon = input<string>(''); // SVG or HTML string
+  readonly iconClick = output<Event>();
 
   readonly baseStyles =
     'inline-flex items-center whitespace-nowrap px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium';
