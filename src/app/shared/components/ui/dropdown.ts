@@ -54,7 +54,7 @@ export class Dropdown implements AfterViewInit {
 
   readonly dropdownClasses = computed(
     () =>
-      `p-2 bg-white border border-gray-200 rounded-2xl shadow-lg dark:border-gray-800 dark:bg-gray-900 + ${this.className()}`,
+      `p-2 bg-white border border-gray-200 rounded-2xl shadow-lg dark:border-gray-800 dark:bg-gray-900 ${this.className()}`,
   );
 
   ngAfterViewInit(): void {
