@@ -11,15 +11,30 @@ import { Button } from '../shared/components/ui/button';
 import { Input } from '../shared/components/form/basic/input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CustomerResource } from './customer-resource';
-import { rxResource } from '@angular/core/rxjs-interop';
-import { EMPTY } from 'rxjs';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, EMPTY } from 'rxjs';
 import { PhoneInput } from '../shared/components/form/phone-input';
 import { CustomerFormService, ICustomerForm } from './customer-form-service';
 import { NotificationService } from '../shared/components/ui/notification-service';
+import { httpResource } from '@angular/common/http';
+import { Dropdown } from '../shared/components/ui/dropdown';
+import { Spinner } from '../shared/components/ui/spinner';
+
+interface PincodeInfo {
+  Name: string;
+  District: string;
+  Pincode: string;
+}
+
+interface PincodeApiResult {
+  Message: string;
+  Status: 'Success' | 'Error';
+  PostOffice: PincodeInfo[] | null;
+}
 
 @Component({
   selector: 'app-customer-form',
-  imports: [Button, Input, ReactiveFormsModule, PhoneInput],
+  imports: [Button, Input, ReactiveFormsModule, PhoneInput, Dropdown, Spinner],
   template: `
     <form [formGroup]="form()" (ngSubmit)="handleFormSubmit()" class="flex flex-col">
       <div class="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
@@ -127,12 +142,47 @@ import { NotificationService } from '../shared/components/ui/notification-servic
           </div>
 
           <div class="col-span-1">
-            <app-input
-              id="pincode"
-              label="Pincode"
-              placeholder="Optional"
-              formControlName="pincode"
-            ></app-input>
+            <app-dropdown>
+              <app-input
+                dropdown-button
+                id="pincode"
+                label="Pincode"
+                placeholder="Optional"
+                formControlName="pincode"
+              ></app-input>
+              <div dropdown-content class="max-h-40 overflow-y-auto">
+                @if (pincodeResource.isLoading()) {
+                  <app-spinner />
+                } @else if (pincodeResource.hasValue() && pincodeResource.value()[0].PostOffice) {
+                  <ul>
+                    @for (address of pincodeResource.value()[0].PostOffice; track address.Name) {
+                      <li
+                        class="flex items-center gap-2 border-b border-gray-200 px-3 py-2.5 text-sm text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-400 cursor-pointer"
+                        (click)="handlePincodeClick(address)"
+                        (keydown.enter)="handlePincodeClick(address)"
+                        (keydown.space)="handlePincodeClick(address)"
+                        tabindex="0"
+                        role="button"
+                      >
+                        <span
+                          class="ml-2 block h-[3px] w-[3px] rounded-full bg-gray-500 dark:bg-gray-400"
+                        ></span
+                        ><span> {{ address.Name }} </span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <li
+                    class="flex items-center gap-2 border-b border-gray-200 px-3 py-2.5 text-sm text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-400 cursor-pointer"
+                  >
+                    <span
+                      class="ml-2 block h-[3px] w-[3px] rounded-full bg-gray-500 dark:bg-gray-400"
+                    ></span
+                    ><span> No Results </span>
+                  </li>
+                }
+              </div>
+            </app-dropdown>
           </div>
 
           <div class="col-span-1 sm:col-span-2">
@@ -172,6 +222,13 @@ export class CustomerForm {
 
   protected form = computed<FormGroup<ICustomerForm>>(
     () => this.formGroup() ?? this.customerFormService.customerForm,
+  );
+
+  protected pincodeInput = toSignal(
+    this.customerFormService.customerForm.controls.pincode.valueChanges.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+    ),
   );
 
   protected resource = rxResource({
@@ -222,6 +279,23 @@ export class CustomerForm {
         this.notificationService.showNotification('Customer Updated', 'success');
         this.closeModal();
       },
+    });
+  }
+
+  protected pincodeResource = httpResource<[PincodeApiResult]>(() => {
+    const pin = this.pincodeInput();
+    if (!pin || pin.length !== 6) {
+      return undefined;
+    }
+    return `https://api.postalpincode.in/pincode/${pin}`;
+  });
+
+  handlePincodeClick(address: PincodeInfo) {
+    this.form().patchValue({
+      street_building: address.Name,
+      area: address.District,
+      district: address.District,
+      pincode: address.Pincode,
     });
   }
 }
