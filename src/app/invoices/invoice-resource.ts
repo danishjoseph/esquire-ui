@@ -93,6 +93,7 @@ const GET = gql<{ purchase: Purchase }, number>`
         category
         brand
         model_name
+        product_warranty
       }
       customer {
         id

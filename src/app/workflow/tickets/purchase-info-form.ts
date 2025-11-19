@@ -7,7 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Option, Select } from '../../shared/components/form/basic/select';
 import { Input } from '../../shared/components/form/basic/input';
 import { Product } from '../../products/product-resource';
@@ -201,6 +201,7 @@ export class PurchaseInfoForm {
       this.form()
         .controls.purchase_status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((purchaseStatus) => {
+          this.form().patchValue({ warranty_status: null });
           this.onStatusChange(purchaseStatus, this.form().controls.warranty_status.value);
         });
 
@@ -209,27 +210,10 @@ export class PurchaseInfoForm {
         .subscribe((warrantyStatus) => {
           this.onStatusChange(this.form().controls.purchase_status.value, warrantyStatus);
         });
-
-      this.form()
-        .controls.service_status?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((status) => {
-          this.updateInvoiceNumberRetype(status);
-        });
     });
     this.destroyRef.onDestroy(() => {
       this.form().reset();
     });
-  }
-
-  private updateInvoiceNumberRetype(status: ServiceStatus | null) {
-    const control = this.form().get('invoice_number_retype');
-    console.log('control', control);
-
-    if (status === ServiceStatus.WARRANTY_FREE && !control) {
-      this.form().addControl('invoice_number_retype', new FormControl('', Validators.required));
-    } else if (status !== ServiceStatus.WARRANTY_FREE && control) {
-      this.form().removeControl('invoice_number_retype');
-    }
   }
 
   private onStatusChange(purchaseStatus: PurchaseStatus, warrantyStatus: WarrantyStatus | null) {
@@ -237,30 +221,41 @@ export class PurchaseInfoForm {
     this.clearDynamicControls();
     this.filterWarrantyOptions(purchaseStatus);
 
+    const today = new Date();
+    const oneYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+
     switch (warrantyStatus) {
       case WarrantyStatus.UNDER_1YR:
-        if (purchaseStatus === PurchaseStatus.ESQUIRE) {
-          this.form().addControl('purchase_date', new FormControl(new Date()));
-          this.form().addControl('invoice_number', new FormControl(''));
-          this.form().setControl('service_status', new FormControl(ServiceStatus.FREE), {
-            emitEvent: true,
-          });
-        }
+        this.form().addControl('purchase_date', new FormControl(today));
+        this.form().addControl('invoice_number', new FormControl(''));
+        this.form().setControl(
+          'service_status',
+          new FormControl({ value: ServiceStatus.FREE, disabled: true }),
+        );
         break;
-      case WarrantyStatus.WARRANTY_UPGRADE:
-        if (purchaseStatus === PurchaseStatus.ESQUIRE) {
-          this.form().addControl('purchase_date', new FormControl(new Date()));
-          this.form().addControl('warranty_expiry', new FormControl(new Date()));
-          this.form().setControl('service_status', new FormControl(), { emitEvent: true });
-        }
+      case WarrantyStatus.WARRANTY_UPGRADE: {
+        this.form().setControl('purchase_date', new FormControl(today));
+        this.form().setControl('warranty_expiry', new FormControl(oneYear));
+        this.form().setControl(
+          'service_status',
+          new FormControl({ value: ServiceStatus.CHARGEABLE, disabled: true }),
+        );
         break;
-      case WarrantyStatus.ASC:
-        this.form().addControl('asc_start_date', new FormControl(new Date()), { emitEvent: true });
-        this.form().addControl('asc_expiry_date', new FormControl(new Date()), { emitEvent: true });
+      }
+      case WarrantyStatus.ASC: {
+        this.form().setControl('asc_start_date', new FormControl(today));
+        this.form().setControl('asc_expiry_date', new FormControl(oneYear));
+        this.form().setControl(
+          'service_status',
+          new FormControl({ value: ServiceStatus.FREE, disabled: true }),
+        );
         break;
+      }
       case WarrantyStatus.NON_WARRANTY:
-        // Disable all inputs
-        this.clearDynamicControls();
+        this.form().setControl(
+          'service_status',
+          new FormControl({ value: ServiceStatus.CHARGEABLE, disabled: true }),
+        );
         break;
       default:
         break;
