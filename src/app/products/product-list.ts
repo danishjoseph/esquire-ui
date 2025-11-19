@@ -19,7 +19,7 @@ import { SearchInput } from '../shared/components/form/search-input';
     >
       <div class="flex gap-2 px-5 mb-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <form class="flex flex-col sm:flex-row justify-end w-full gap-3">
-          <app-search-input [formControl]="search$" />
+          <app-search-input [formControl]="search$" placeholder="Serach By Serial Number..." />
           <app-button
             size="sm"
             variant="primary"

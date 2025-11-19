@@ -24,7 +24,7 @@ import { Input } from './basic/input';
       />
       <app-input
         id="app-search-input"
-        placeholder="Search..."
+        [placeholder]="placeholder()"
         (input)="handleInput($event)"
         (blur)="onTouched()"
       />
