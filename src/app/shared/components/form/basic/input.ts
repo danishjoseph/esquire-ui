@@ -84,8 +84,13 @@ export class Input implements ControlValueAccessor {
     return inputClasses;
   });
 
-  writeValue(value: string) {
-    this.#value.set(value ?? '');
+  writeValue(value: string | Date) {
+    if (value instanceof Date) {
+      const formatted = value.toISOString().substring(0, 10);
+      this.#value.set(formatted);
+    } else {
+      this.#value.set(value ?? '');
+    }
   }
 
   registerOnChange(fn: (value: string) => void) {
