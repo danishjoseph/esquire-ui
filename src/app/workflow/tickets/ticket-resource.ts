@@ -209,6 +209,7 @@ interface ServiceLogs {
 interface TicketsRequest {
   offset: number;
   limit: number;
+  sections: ServiceSectionName[];
   status: TicketStatus;
   search: string;
 }
@@ -308,8 +309,20 @@ const TICKET_TABLE = gql`
 `;
 
 const TICKETS = gql<ListResponse, TicketsRequest>`
-  query services($limit: Int, $offset: Int, $status: TicketStatus, $search: String) {
-    services(limit: $limit, offset: $offset, status: $status, search: $search) {
+  query services(
+    $limit: Int
+    $offset: Int
+    $sections: [ServiceSectionName!]
+    $status: TicketStatus
+    $search: String
+  ) {
+    services(
+      limit: $limit
+      offset: $offset
+      sections: $sections
+      status: $status
+      search: $search
+    ) {
       total
       services {
         ...TicketTable
@@ -396,6 +409,15 @@ const UPDATE = gql<TicketResponse, unknown>`
   }
 `;
 
+const GET_USED_SERVICE_SECTION_NAMES = gql<
+  { usedServiceSectionNames: ServiceSectionName[] },
+  { status: TicketStatus }
+>`
+  query usedServiceSectionNames($status: TicketStatus!) {
+    usedServiceSectionNames(status: $status)
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -404,11 +426,17 @@ export class TicketResource {
   #ticketsRef?: QueryRef<ListResponse, TicketsRequest>;
   #ticketsRequestState = signal<TicketsRequest | null>(null);
 
-  tickets(limit: number, offset: number, status: TicketStatus, search: string) {
-    this.#ticketsRequestState.set({ limit, offset, status, search });
+  tickets(
+    limit: number,
+    offset: number,
+    sections: ServiceSectionName[],
+    status: TicketStatus,
+    search: string,
+  ) {
+    this.#ticketsRequestState.set({ limit, offset, sections, status, search });
     this.#ticketsRef = this.#apollo.watchQuery({
       query: TICKETS,
-      variables: { offset, limit, status, search },
+      variables: { offset, limit, sections, status, search },
       fetchPolicy: 'cache-and-network',
     });
     return this.#ticketsRef?.valueChanges.pipe(map((res) => res.data));
@@ -459,6 +487,15 @@ export class TicketResource {
       .watchQuery({
         query: GET_LOGS,
         variables: { id: +id },
+      })
+      .valueChanges.pipe(map((res) => res.data));
+  }
+
+  usedServiceSectionNames(status: TicketStatus) {
+    return this.#apollo
+      .watchQuery({
+        query: GET_USED_SERVICE_SECTION_NAMES,
+        variables: { status },
       })
       .valueChanges.pipe(map((res) => res.data));
   }

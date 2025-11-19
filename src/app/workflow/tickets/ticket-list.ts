@@ -4,6 +4,7 @@ import {
   computed,
   DestroyRef,
   inject,
+  linkedSignal,
   model,
   signal,
 } from '@angular/core';
@@ -24,6 +25,7 @@ import { TicketModal } from './ticket-modal';
 import { ServiceSectionName } from './ticket-form-service';
 import { ReplyType } from './ticket-reply';
 import { Pagination } from '../../shared/components/ui/pagination';
+import { ServiceSectionFilter } from './service-section-filter';
 
 export const routeToStatusMap: Record<string, TicketStatus> = {
   'in-progress': TicketStatus.IN_PROGRESS,
@@ -54,6 +56,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
     DatePipe,
     TicketModal,
     Pagination,
+    ServiceSectionFilter,
   ],
   template: `
     <app-page-breadcrumb pageTitle="Support Tickets" />
@@ -86,9 +89,10 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                     Created At
                   </th>
                   <th
-                    class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                    class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400 flex items-center justify-between"
                   >
-                    Assigned Section
+                    <span> Assigned Section </span>
+                    <app-service-section-filter [(selectedSections)]="selectedSections" />
                   </th>
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400 hidden sm:table-cell"
@@ -257,6 +261,7 @@ export class TicketList {
           const mappedStatus = routeToStatusMap[routeStatus];
           if (mappedStatus && Object.values(TicketStatus).includes(mappedStatus)) {
             this.selectedTab.set(mappedStatus || TicketStatus.IN_PROGRESS);
+            this.usedServiceSectionNamesResource.reload();
           }
         }),
       ),
@@ -276,11 +281,37 @@ export class TicketList {
     });
   }
 
+  protected usedServiceSectionNamesResource = rxResource({
+    params: () => signal(true),
+    stream: () => this.ticketResource.usedServiceSectionNames(this.selectedTab()),
+  });
+
+  protected serviceSections = computed(() => {
+    return this.usedServiceSectionNamesResource.hasValue()
+      ? this.usedServiceSectionNamesResource.value().usedServiceSectionNames
+      : [];
+  });
+
+  readonly selectedSections = linkedSignal(() => this.serviceSections());
+
+  readonly requestOptions = computed(() => ({
+    search: this.search(),
+    sections: this.selectedSections(),
+    status: this.selectedTab(),
+    page: this.currentPage(),
+  }));
+
   protected resource = rxResource({
-    params: () => ({ search: this.search(), status: this.selectedTab(), page: this.currentPage() }),
+    params: () => this.requestOptions(),
     stream: ({ params }) => {
       const offset = (params.page - 1) * this.#limit;
-      return this.ticketResource.tickets(this.#limit, offset, params.status, params.search);
+      return this.ticketResource.tickets(
+        this.#limit,
+        offset,
+        params.sections,
+        params.status,
+        params.search,
+      );
     },
   });
 
@@ -314,6 +345,10 @@ export class TicketList {
         serviceSection: item.serviceSection?.name,
       },
     });
+  }
+
+  handle() {
+    return;
   }
 
   handleUpdateSection(item: TicketTable) {
