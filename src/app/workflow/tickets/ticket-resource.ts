@@ -410,11 +410,14 @@ const UPDATE = gql<TicketResponse, unknown>`
 `;
 
 const GET_USED_SERVICE_SECTION_NAMES = gql<
-  { usedServiceSectionNames: ServiceSectionName[] },
+  { usedServiceSectionNames: { sectionName: ServiceSectionName; count: number }[] },
   { status: TicketStatus }
 >`
   query usedServiceSectionNames($status: TicketStatus!) {
-    usedServiceSectionNames(status: $status)
+    usedServiceSectionNames(status: $status) {
+      sectionName
+      count
+    }
   }
 `;
 
@@ -477,6 +480,10 @@ export class TicketResource {
         refetchQueries: [
           { query: GET_LOGS, variables: { id: updateServiceInput.id } },
           { query: TICKETS, variables: { ...this.#ticketsRequestState() } },
+          {
+            query: GET_USED_SERVICE_SECTION_NAMES,
+            variables: { status: updateServiceInput.status },
+          },
         ],
       })
       .pipe(map((res) => res.data));

@@ -296,7 +296,7 @@ export class TicketList {
 
   readonly requestOptions = computed(() => ({
     search: this.search(),
-    sections: this.selectedSections(),
+    sections: this.selectedSections().map((s) => s.sectionName),
     status: this.selectedTab(),
     page: this.currentPage(),
   }));
