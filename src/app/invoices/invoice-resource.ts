@@ -53,7 +53,11 @@ const PURCHASE = gql`
     id
     purchase_status
     warranty_status
+    purchase_date
     invoice_number
+    warranty_expiry
+    asc_start_date
+    asc_expiry_date
     product {
       id
       name

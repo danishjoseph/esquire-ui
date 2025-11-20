@@ -35,6 +35,7 @@ export interface ITicketForm {
   product: FormGroup<IProductForm>;
   customer: FormGroup<ICustomerForm>;
   purchase: FormGroup<IPurchaseInfo>;
+  purchase_id: FormControl<number | null>;
   worklog: FormGroup<IWorkLogForm>;
   serviceCharge: FormGroup<IServiceCharge>;
   serviceSection: FormControl<ServiceSectionName | null>;
@@ -62,7 +63,7 @@ export interface ITicketForm {
       <div class="flex flex-col space-y-6">
         <app-card title="Customer Information">
           @if (!ticketId()) {
-            <div class="flex justify-end">
+            <div card-actions>
               <app-dropdown class="relative" className="absolute w-full z-10">
                 <div dropdown-button>
                   <app-search-input placeholder="Add Existing" [formControl]="customerSearch$" />
@@ -104,7 +105,7 @@ export interface ITicketForm {
         </app-card>
         <app-card title="Product & Purchase Information">
           @if (!ticketId()) {
-            <div class="flex justify-end">
+            <div card-actions>
               <app-dropdown class="relative" className="absolute w-full">
                 <div dropdown-button>
                   <app-search-input placeholder="Search Product" [formControl]="purchaseSearch$" />
@@ -208,6 +209,7 @@ export class TicketForm {
     worklog: this.ticketFormService.worklogForm,
     serviceCharge: this.ticketFormService.serviceChargeForm,
     serviceSection: new FormControl(null, [Validators.required]),
+    purchase_id: new FormControl(null),
   });
 
   protected customerSearch$ = new FormControl('', { nonNullable: true });
@@ -250,11 +252,12 @@ export class TicketForm {
   }
 
   protected handlePurchaseClick(purchase: Purchase) {
+    this.form.controls.purchase_id.setValue(purchase.id);
     this.form.controls.purchase.patchValue(purchase);
     this.form.controls.product.patchValue(purchase.product);
     this.purchaseSearch$.reset();
-    this.form.controls.product.disable();
-    this.form.controls.purchase.disable();
+    this.form.controls.purchase.disable({ emitEvent: false });
+    this.form.controls.product.disable({ emitEvent: false });
   }
 
   clear() {
@@ -328,6 +331,7 @@ export class TicketForm {
       advance_amount: Number(serviceCharge?.advance_amount),
       product_condition: worklog?.product_condition as ProductCondition,
       purchase: purchaseInput,
+      ...(form.purchase_id && { purchase_id: form.purchase_id.toString() }),
       accessories,
       service_logs,
       service_section: serviceSection ?? null,
