@@ -9,7 +9,7 @@ import { CreateServiceInput, TicketResource, TicketStatus, TicketView } from './
 import { Button } from '../../shared/components/ui/button';
 import { Card } from '../../shared/components/cards/card';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { debounceTime, EMPTY } from 'rxjs';
+import { debounceTime, EMPTY, map } from 'rxjs';
 import {
   TicketFormService,
   IAccessory,
@@ -30,6 +30,7 @@ import { SearchInput } from '../../shared/components/form/search-input';
 import { NotificationService } from '../../shared/components/ui/notification-service';
 import { Select } from '../../shared/components/form/basic/select';
 import { InvoiceResource, Purchase } from '../../invoices/invoice-resource';
+import { ActivatedRoute } from '@angular/router';
 
 export interface ITicketForm {
   product: FormGroup<IProductForm>;
@@ -193,6 +194,7 @@ export class TicketForm {
   readonly SERVICE_SECTION_NAME_OPTIONS = ServiceSectionNameOptions;
 
   readonly ticketId = input('');
+  protected route = inject(ActivatedRoute);
   protected ticketResource = inject(TicketResource);
   protected ticketFormService = inject(TicketFormService);
   protected customerFormService = inject(CustomerFormService);
@@ -211,6 +213,10 @@ export class TicketForm {
     serviceSection: new FormControl(null, [Validators.required]),
     purchase_id: new FormControl(null),
   });
+
+  protected serviceType = toSignal(
+    this.route.data.pipe(map((d) => d['serviceType'] as ServiceType)),
+  );
 
   protected customerSearch$ = new FormControl('', { nonNullable: true });
   protected customerSearch = toSignal(this.customerSearch$.valueChanges.pipe(debounceTime(500)), {
@@ -322,7 +328,7 @@ export class TicketForm {
     const accessories = worklog?.accessories as unknown as IAccessory[];
     return {
       status: TicketStatus.IN_PROGRESS,
-      service_type: ServiceType.INHOUSE,
+      service_type: this.serviceType() || ServiceType.INHOUSE,
       ...(purchase?.service_status && { service_status: purchase.service_status }),
       quotation_amount: Number(serviceCharge?.quotation_amount),
       service_charge: Number(serviceCharge?.service_charge),

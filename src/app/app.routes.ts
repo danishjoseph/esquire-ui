@@ -10,6 +10,7 @@ import { TicketReply } from './workflow/tickets/ticket-reply';
 import { autoLoginPartialRoutesGuard } from 'angular-auth-oidc-client';
 import { InvoiceList } from './invoices/invoice-list';
 import { UserList } from './settings/users/user-list';
+import { ServiceType } from './workflow/tickets/purchase-info-form';
 
 export const routes: Routes = [
   {
@@ -61,10 +62,18 @@ export const routes: Routes = [
             title: 'Tickets | Esquire',
           },
           {
-            path: 'add',
+            path: 'add-inhouse',
             component: TicketAdd,
             pathMatch: 'full',
-            title: 'Create Ticket | Esquire',
+            title: 'Create Ticket | Inhouse',
+            data: { serviceType: ServiceType.INHOUSE },
+          },
+          {
+            path: 'add-outdoor',
+            component: TicketAdd,
+            pathMatch: 'full',
+            title: 'Create Ticket | Outdoor',
+            data: { serviceType: ServiceType.OUTDOOR },
           },
           {
             path: 'reply',
