@@ -22,9 +22,9 @@ export class TicketAdd {
   );
 
   #serviceTypeMap: Record<ServiceType, string> = {
-    [ServiceType.INHOUSE]: 'Inhouse',
-    [ServiceType.OUTDOOR]: 'Outdoor',
+    [ServiceType.INHOUSE]: 'Carry in services',
+    [ServiceType.OUTDOOR]: 'On-site/outdoor',
   };
 
-  protected pageTitle = computed(() => `Add ${this.#serviceTypeMap[this.serviceType()]} Ticket`);
+  protected pageTitle = computed(() => this.#serviceTypeMap[this.serviceType()]);
 }
