@@ -76,8 +76,8 @@ export enum ServiceStatus {
         <div class="col-span-1">
           <app-select
             id="name"
-            label="Warranty Status"
-            placeholder="Warranty Status"
+            label="Service Warranty Status"
+            placeholder="Service Warranty Status"
             formControlName="warranty_status"
             [options]="warrantyOptions()"
           />

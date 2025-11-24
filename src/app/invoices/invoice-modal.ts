@@ -9,7 +9,7 @@ import { InvoiceForm } from './invoice-form';
     <app-modal [isOpen]="isOpen()" (closeEvent)="closed.emit()" className="max-w-[700px] p-5">
       @if (isOpen()) {
         <div
-          class="custom-scrollbar w-full max-w-[700px] max-h-[80vh] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11"
+          class="custom-scrollbar w-full max-w-[850px] max-h-[80vh] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11"
         >
           <app-invoice-form [invoiceId]="invoiceId()" (formSubmit)="closed.emit()" />
         </div>

@@ -27,7 +27,7 @@ import { InvoiceModal } from './invoice-modal';
           <th
             class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
           >
-            Warranty Status
+            Service Warranty Status
           </th>
           <th
             class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
