@@ -211,6 +211,7 @@ interface TicketsRequest {
   limit: number;
   sections: ServiceSectionName[];
   status: TicketStatus;
+  service_type: ServiceType[];
   search: string;
 }
 
@@ -226,6 +227,18 @@ export interface TicketTable {
   status: TicketStatus;
   updated_by?: {
     name: string | null;
+  };
+}
+
+interface FilterOption<T> {
+  name: T;
+  count: number;
+}
+
+interface TicketFilters {
+  ticketFilters: {
+    serviceSections: FilterOption<ServiceSectionName>[];
+    serviceTypes: FilterOption<ServiceType>[];
   };
 }
 
@@ -314,6 +327,7 @@ const TICKETS = gql<ListResponse, TicketsRequest>`
     $offset: Int
     $sections: [ServiceSectionName!]
     $status: TicketStatus
+    $service_type: [ServiceType!]
     $search: String
   ) {
     services(
@@ -321,6 +335,7 @@ const TICKETS = gql<ListResponse, TicketsRequest>`
       offset: $offset
       sections: $sections
       status: $status
+      service_type: $service_type
       search: $search
     ) {
       total
@@ -409,14 +424,17 @@ const UPDATE = gql<TicketResponse, unknown>`
   }
 `;
 
-const GET_USED_SERVICE_SECTION_NAMES = gql<
-  { usedServiceSectionNames: { sectionName: ServiceSectionName; count: number }[] },
-  { status: TicketStatus }
->`
-  query usedServiceSectionNames($status: TicketStatus!) {
-    usedServiceSectionNames(status: $status) {
-      sectionName
-      count
+const GET_ALL_TICKET_FILTERS = gql<TicketFilters, { status: TicketStatus }>`
+  query ticketFilters($status: TicketStatus!) {
+    ticketFilters(status: $status) {
+      serviceSections {
+        name
+        count
+      }
+      serviceTypes {
+        name
+        count
+      }
     }
   }
 `;
@@ -434,12 +452,13 @@ export class TicketResource {
     offset: number,
     sections: ServiceSectionName[],
     status: TicketStatus,
+    service_type: ServiceType[],
     search: string,
   ) {
-    this.#ticketsRequestState.set({ limit, offset, sections, status, search });
+    this.#ticketsRequestState.set({ limit, offset, sections, status, service_type, search });
     this.#ticketsRef = this.#apollo.watchQuery({
       query: TICKETS,
-      variables: { offset, limit, sections, status, search },
+      variables: { offset, limit, sections, status, service_type, search },
       fetchPolicy: 'cache-and-network',
     });
     return this.#ticketsRef?.valueChanges.pipe(map((res) => res.data));
@@ -481,7 +500,7 @@ export class TicketResource {
           { query: GET_LOGS, variables: { id: updateServiceInput.id } },
           { query: TICKETS, variables: { ...this.#ticketsRequestState() } },
           {
-            query: GET_USED_SERVICE_SECTION_NAMES,
+            query: GET_ALL_TICKET_FILTERS,
             variables: { status: updateServiceInput.status },
           },
         ],
@@ -498,10 +517,10 @@ export class TicketResource {
       .valueChanges.pipe(map((res) => res.data));
   }
 
-  usedServiceSectionNames(status: TicketStatus) {
+  ticketFilters(status: TicketStatus) {
     return this.#apollo
       .watchQuery({
-        query: GET_USED_SERVICE_SECTION_NAMES,
+        query: GET_ALL_TICKET_FILTERS,
         variables: { status },
       })
       .valueChanges.pipe(map((res) => res.data));

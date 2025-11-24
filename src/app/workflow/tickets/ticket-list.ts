@@ -26,6 +26,7 @@ import { ServiceSectionName } from './ticket-form-service';
 import { ReplyType } from './ticket-reply';
 import { Pagination } from '../../shared/components/ui/pagination';
 import { ServiceSectionFilter } from './service-section-filter';
+import { ServiceTypeFilter } from './service-type-filter';
 
 export const routeToStatusMap: Record<string, TicketStatus> = {
   'in-progress': TicketStatus.IN_PROGRESS,
@@ -57,6 +58,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
     TicketModal,
     Pagination,
     ServiceSectionFilter,
+    ServiceTypeFilter,
   ],
   template: `
     <app-page-breadcrumb pageTitle="Support Tickets" />
@@ -77,6 +79,7 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400 hidden sm:table-cell"
                   >
                     Case ID
+                    <app-service-type-filter [(selectedServiceType)]="selectedServiceType" />
                   </th>
                   <th
                     class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"
@@ -283,21 +286,34 @@ export class TicketList {
 
   protected usedServiceSectionNamesResource = rxResource({
     params: () => signal(true),
-    stream: () => this.ticketResource.usedServiceSectionNames(this.selectedTab()),
+    stream: () => this.ticketResource.ticketFilters(this.selectedTab()),
+  });
+
+  protected usedServiceTypesResource = rxResource({
+    params: () => signal(true),
+    stream: () => this.ticketResource.ticketFilters(this.selectedTab()),
   });
 
   protected serviceSections = computed(() => {
     return this.usedServiceSectionNamesResource.hasValue()
-      ? this.usedServiceSectionNamesResource.value().usedServiceSectionNames
+      ? this.usedServiceSectionNamesResource.value().ticketFilters.serviceSections
+      : [];
+  });
+
+  protected serviceTypes = computed(() => {
+    return this.usedServiceSectionNamesResource.hasValue()
+      ? this.usedServiceSectionNamesResource.value().ticketFilters.serviceTypes
       : [];
   });
 
   readonly selectedSections = linkedSignal(() => this.serviceSections());
+  readonly selectedServiceType = linkedSignal(() => this.serviceTypes());
 
   readonly requestOptions = computed(() => ({
     search: this.search(),
-    sections: this.selectedSections().map((s) => s.sectionName),
+    sections: this.selectedSections().map((s) => s.name),
     status: this.selectedTab(),
+    service_type: this.selectedServiceType().map((t) => t.name),
     page: this.currentPage(),
   }));
 
@@ -310,6 +326,7 @@ export class TicketList {
         offset,
         params.sections,
         params.status,
+        params.service_type,
         params.search,
       );
     },
