@@ -303,7 +303,7 @@ export class TicketForm {
     this.ticketResource.create(request).subscribe({
       next: (res) => {
         this.notificationService.showNotification(`Ticket Created ${res?.createService.caseId}`);
-        this.form.reset();
+        this.clear();
       },
     });
   }
