@@ -66,8 +66,17 @@ export interface CreateServiceInput {
 interface UpdateServiceInput {
   id: number;
   status: TicketStatus;
-  service_section_name: ServiceSectionName | null;
-  service_logs: FormGroup<IWorkLog>['value'][];
+  service_section_name?: ServiceSectionName | null;
+  service_logs?: FormGroup<IWorkLog>['value'][];
+}
+
+interface UpdateServiceChargeInput {
+  id: number;
+  quotation_amount: number;
+  service_charge: number;
+  gst_amount: number;
+  total_amount: number;
+  advance_amount: number;
 }
 
 interface ServiceStatusMetrics {
@@ -474,6 +483,16 @@ const UPDATE = gql<TicketResponse, unknown>`
   }
 `;
 
+const UPDATE_SERVICE_CHARGE = gql<TicketResponse, unknown>`
+  mutation updateServiceCharge($updateServiceChargeInput: UpdateServiceChargeInput!) {
+    updateServiceCharge(updateServiceChargeInput: $updateServiceChargeInput) {
+      id
+      case_id
+      status
+    }
+  }
+`;
+
 const GET_ALL_TICKET_FILTERS = gql<TicketFilters, { status: TicketStatus }>`
   query ticketFilters($status: TicketStatus!) {
     ticketFilters(status: $status) {
@@ -574,5 +593,15 @@ export class TicketResource {
         variables: { status },
       })
       .valueChanges.pipe(map((res) => res.data));
+  }
+
+  updateServiceCharge(updateServiceChargeInput: UpdateServiceChargeInput) {
+    return this.#apollo
+      .mutate({
+        mutation: UPDATE_SERVICE_CHARGE,
+        variables: { updateServiceChargeInput },
+        refetchQueries: [{ query: TICKETS, variables: { ...this.#ticketsRequestState() } }],
+      })
+      .pipe(map((res) => res.data));
   }
 }

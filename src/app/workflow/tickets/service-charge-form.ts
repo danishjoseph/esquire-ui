@@ -9,12 +9,16 @@ import {
 } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Input } from '../../shared/components/form/basic/input';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TicketFormService, IServiceCharge } from './ticket-form-service';
+import { TicketResource } from './ticket-resource';
+import { EMPTY } from 'rxjs';
+import { Button } from '../../shared/components/ui/button';
+import { NotificationService } from '../../shared/components/ui/notification-service';
 
 @Component({
   selector: 'app-service-charge-form',
-  imports: [ReactiveFormsModule, Input],
+  imports: [ReactiveFormsModule, Input, Button],
   template: `
     <form [formGroup]="form()" (ngSubmit)="handleFormSubmit()">
       <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -85,6 +89,14 @@ import { TicketFormService, IServiceCharge } from './ticket-form-service';
             <app-input id="gst_amount" label="GST Charges (18%)" formControlName="gst_amount" />
           </div>
         }
+        @if (!formGroup()) {
+          <div class="flex items-center justify-end w-full gap-3 mt-6">
+            <app-button type="reset" size="sm" variant="outline" (btnClick)="closeModal()">
+              Close
+            </app-button>
+            <app-button type="submit" size="sm" [disabled]="form().invalid"> Update </app-button>
+          </div>
+        }
       </div>
     </form>
   `,
@@ -97,10 +109,28 @@ export class ServiceChargeForm {
   public gstAmount = 0;
   public totalAmount = 0;
 
+  protected ticketResource = inject(TicketResource);
   protected ticketFormService = inject(TicketFormService);
+  protected notificationService = inject(NotificationService);
 
   handleFormSubmit() {
-    console.log('form values', this.form().value, 'valid', this.form().valid);
+    const { quotation_amount, service_charge, gst_amount, total_amount, advance_amount } =
+      this.form().getRawValue();
+    this.ticketResource
+      .updateServiceCharge({
+        id: Number(this.ticketId()),
+        quotation_amount: Number(quotation_amount),
+        service_charge: Number(service_charge),
+        gst_amount: Number(gst_amount),
+        total_amount: Number(total_amount),
+        advance_amount: Number(advance_amount),
+      })
+      .subscribe({
+        complete: () => {
+          this.notificationService.showNotification('Service Charges updated');
+          this.closeModal();
+        },
+      });
   }
 
   protected destroyRef = inject(DestroyRef);
@@ -109,12 +139,36 @@ export class ServiceChargeForm {
     () => this.formGroup() ?? this.ticketFormService.serviceChargeForm,
   );
 
+  protected resource = rxResource({
+    params: () => this.ticketId(),
+    stream: ({ params }) => (params ? this.ticketResource.ticket(params) : EMPTY),
+  });
+
   constructor() {
     afterRenderEffect(() => {
+      if (this.resource.hasValue()) {
+        const data = this.resource.value().service;
+        this.form().patchValue({
+          service_charge: data.service_charge.toString(),
+          advance_amount: data.advance_amount.toString(),
+          quotation_amount: data.quotation_amount.toString(),
+          gst_amount: data.quotation_amount.toString(),
+          total_amount: data.quotation_amount.toString(),
+        });
+      }
       this.form()
         .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => this.setupCalculations());
     });
+
+    this.destroyRef.onDestroy(() => {
+      this.form().reset();
+    });
+  }
+
+  closeModal() {
+    this.form().reset();
+    this.formSubmit.emit();
   }
 
   private setupCalculations() {

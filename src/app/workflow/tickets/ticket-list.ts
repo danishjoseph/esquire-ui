@@ -206,6 +206,14 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                               Update Status
                             </button>
                           }
+                          @if (item.status === TICKET_STATUS.DELIVERY_READY) {
+                            <button
+                              class="text-sm flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+                              (click)="handleServiceCharge(item)"
+                            >
+                              Update Service Charge
+                            </button>
+                          }
                         </div>
                       </app-dropdown>
                     </td>
@@ -228,12 +236,18 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
         />
       </div>
     </app-card>
-    <app-ticket-modal [ticketId]="ticketId()" [isOpen]="isOpen()" (closed)="closeModal()" />
+    <app-ticket-modal
+      [ticketId]="ticketId()"
+      [isOpen]="isOpen()"
+      [isServiceChargeFormOpen]="isServiceChargeModalOpen()"
+      (closed)="closeModal()"
+    />
   `,
 })
 export class TicketList {
   protected ticketId = model('');
   protected isOpen = signal(false);
+  protected isServiceChargeModalOpen = signal(false);
   protected router = inject(Router);
   protected route = inject(ActivatedRoute);
   protected destroyRef = inject(DestroyRef);
@@ -349,9 +363,15 @@ export class TicketList {
     this.isOpen.set(true);
   }
 
+  openServiceChargeModal(id: string) {
+    this.ticketId.set(id);
+    this.isServiceChargeModalOpen.set(true);
+  }
+
   closeModal() {
     this.ticketId.set('');
     this.isOpen.set(false);
+    this.isServiceChargeModalOpen.set(false);
   }
 
   handleViewMore(item: TicketTable) {
@@ -369,8 +389,8 @@ export class TicketList {
     });
   }
 
-  handle() {
-    return;
+  handleServiceCharge(item: TicketTable) {
+    this.openServiceChargeModal(item.id.toString());
   }
 
   handleUpdateSection(item: TicketTable) {
