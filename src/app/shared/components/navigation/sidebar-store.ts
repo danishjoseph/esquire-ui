@@ -86,12 +86,12 @@ export class SidebarStore {
         {
           name: 'Carry in Services',
           path: 'service/add-inhouse',
-          allowedRoles: [UserRole.FOE, UserRole.FOE],
+          allowedRoles: [UserRole.ADMIN, UserRole.FOE],
         },
         {
           name: 'On-site/Outdoor ',
           path: 'service/add-outdoor',
-          allowedRoles: [UserRole.FOE, UserRole.FOE, UserRole.ENGINEER],
+          allowedRoles: [UserRole.ADMIN, UserRole.FOE, UserRole.ENGINEER],
         },
       ],
     },

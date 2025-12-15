@@ -8,7 +8,7 @@ import {
   model,
   signal,
 } from '@angular/core';
-import { Badge, BadgeColor } from '../../shared/components/ui/badge';
+import { Badge } from '../../shared/components/ui/badge';
 import { Dropdown } from '../../shared/components/ui/dropdown';
 import { PageBreadcrumb } from '../../shared/components/ui/page-breadcrumb';
 import { AvatarText } from '../../shared/components/avatar/avatar-text';
@@ -17,12 +17,16 @@ import { TabGroup } from '../../shared/components/ui/tab-group';
 import { WorklogStatistics } from './worklog-statistics';
 import { Card } from '../../shared/components/cards/card';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { TicketResource, TicketStatus, TicketTable } from './ticket-resource';
+import {
+  serviceSectionInfoMap,
+  TicketResource,
+  TicketStatus,
+  TicketTable,
+} from './ticket-resource';
 import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { debounceTime, map } from 'rxjs';
 import { TicketModal } from './ticket-modal';
-import { ServiceSectionName } from './ticket-form-service';
 import { ReplyType } from './ticket-reply';
 import { Pagination } from '../../shared/components/ui/pagination';
 import { ServiceSectionFilter } from './service-section-filter';
@@ -142,13 +146,13 @@ export const statusToRouteMap: Record<TicketStatus, string> = {
                         size="sm"
                         [color]="
                           item.serviceSection && item.serviceSection.name
-                            ? serviceSectionInfoMap[item.serviceSection.name].color
+                            ? SERVICE_SECTION_INFO_MAP[item.serviceSection.name].color
                             : 'light'
                         "
                       >
                         {{
                           item.serviceSection && item.serviceSection.name
-                            ? serviceSectionInfoMap[item.serviceSection.name].label
+                            ? SERVICE_SECTION_INFO_MAP[item.serviceSection.name].label
                             : '-'
                         }}
                       </app-badge>
@@ -236,6 +240,7 @@ export class TicketList {
   protected ticketResource = inject(TicketResource);
   readonly selectedTab = model(TicketStatus.IN_PROGRESS);
   protected TICKET_STATUS = TicketStatus;
+  protected SERVICE_SECTION_INFO_MAP = serviceSectionInfoMap;
 
   #currentPage = signal(1);
   #limit = 10;
@@ -390,35 +395,4 @@ export class TicketList {
     { key: TicketStatus.DELIVERED, value: 'Delivered' },
     { key: TicketStatus.CLOSED, value: 'Closed' },
   ];
-
-  serviceSectionInfoMap: Record<ServiceSectionName, { label: string; color: BadgeColor }> = {
-    [ServiceSectionName.LAP_CARE]: {
-      label: 'Laptop Care',
-      color: 'primary',
-    },
-    [ServiceSectionName.CHIP_LEVEL]: {
-      label: 'Chip Level Repair',
-      color: 'error',
-    },
-    [ServiceSectionName.DESKTOP_CARE]: {
-      label: 'Desktop Care',
-      color: 'info',
-    },
-    [ServiceSectionName.IPG]: {
-      label: 'Industrial Printing Group',
-      color: 'success',
-    },
-    [ServiceSectionName.VENDOR_ASP]: {
-      label: 'Vendor Authorized Service Provider',
-      color: 'light',
-    },
-    [ServiceSectionName.OUTSOURCE]: {
-      label: 'Outsource',
-      color: 'warning',
-    },
-    [ServiceSectionName.HOLD]: {
-      label: 'On Hold',
-      color: 'dark',
-    },
-  };
 }

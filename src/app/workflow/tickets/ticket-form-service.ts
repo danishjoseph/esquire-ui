@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { PurchaseStatus, ServiceStatus, WarrantyStatus } from './purchase-info-form';
 import { Option } from '../../shared/components/form/basic/select';
+import { ServiceSectionName } from './ticket-resource';
 
 export enum LogType {
   DIAGNOSIS = 'DIAGNOSIS',
@@ -27,16 +28,6 @@ export enum ProductCondition {
   DAMAGED = 'DAMAGED',
 }
 
-export enum ServiceSectionName {
-  LAP_CARE = 'LAP_CARE',
-  CHIP_LEVEL = 'CHIP_LEVEL',
-  DESKTOP_CARE = 'DESKTOP_CARE',
-  IPG = 'IPG',
-  VENDOR_ASP = 'VENDOR_ASP',
-  OUTSOURCE = 'OUTSOURCE',
-  HOLD = 'HOLD',
-}
-
 export enum TicketStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   QC = 'QC',
@@ -46,13 +37,16 @@ export enum TicketStatus {
 }
 
 export const ServiceSectionNameOptions: Option[] = [
-  { value: ServiceSectionName.LAP_CARE, label: 'Lap Care' },
+  { value: ServiceSectionName.LAP_FOE, label: 'Lap Foe' },
+  { value: ServiceSectionName.LAP_CARE, label: 'Lap Care-1ˢᵗ Bench' },
   { value: ServiceSectionName.CHIP_LEVEL, label: 'Chip Level' },
   { value: ServiceSectionName.DESKTOP_CARE, label: 'Desktop Care' },
   { value: ServiceSectionName.IPG, label: 'IPG' },
   { value: ServiceSectionName.VENDOR_ASP, label: 'Vendor ASP' },
   { value: ServiceSectionName.OUTSOURCE, label: 'Outsource' },
-  { value: ServiceSectionName.HOLD, label: 'Hold' },
+  { value: ServiceSectionName.HUB_WKY, label: 'Hub-wky' },
+  { value: ServiceSectionName.HUB_KRA, label: 'Hub-kra' },
+  { value: ServiceSectionName.OUTDOOR, label: 'Outdoor' },
 ];
 
 export interface IWorkLog {

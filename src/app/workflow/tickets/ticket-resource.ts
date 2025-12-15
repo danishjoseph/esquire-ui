@@ -13,6 +13,7 @@ import { ICustomerForm } from '../../customers/customer-form-service';
 import { IAccessory, IWorkLog, LogType, ProductCondition } from './ticket-form-service';
 import { ProductCategory } from '../../products/product-resource';
 import { IProductForm } from '../../products/product-form-service';
+import { BadgeColor } from '../../shared/components/ui/badge';
 
 export enum TicketStatus {
   IN_PROGRESS = 'IN_PROGRESS',
@@ -88,15 +89,64 @@ interface ServiceSection {
   service_section_name: ServiceSectionName;
 }
 
-enum ServiceSectionName {
+export enum ServiceSectionName {
+  LAP_FOE = 'LAP_FOE',
   LAP_CARE = 'LAP_CARE',
   CHIP_LEVEL = 'CHIP_LEVEL',
   DESKTOP_CARE = 'DESKTOP_CARE',
   IPG = 'IPG',
   VENDOR_ASP = 'VENDOR_ASP',
   OUTSOURCE = 'OUTSOURCE',
-  HOLD = 'HOLD',
+  HUB_WKY = 'HUB_WKY',
+  HUB_KRA = 'HUB_KRA',
+  OUTDOOR = 'OUTDOOR',
 }
+
+export const serviceSectionInfoMap: Record<
+  ServiceSectionName,
+  { label: string; color: BadgeColor }
+> = {
+  [ServiceSectionName.LAP_FOE]: {
+    label: 'Lap Foe',
+    color: 'error',
+  },
+  [ServiceSectionName.LAP_CARE]: {
+    label: 'Lap Care-1ˢᵗ Bench',
+    color: 'primary',
+  },
+  [ServiceSectionName.CHIP_LEVEL]: {
+    label: 'Chip Level',
+    color: 'error',
+  },
+  [ServiceSectionName.DESKTOP_CARE]: {
+    label: 'Desktop Care',
+    color: 'info',
+  },
+  [ServiceSectionName.IPG]: {
+    label: 'IPG',
+    color: 'success',
+  },
+  [ServiceSectionName.VENDOR_ASP]: {
+    label: 'Vendor ASP',
+    color: 'light',
+  },
+  [ServiceSectionName.OUTSOURCE]: {
+    label: 'Outsource',
+    color: 'warning',
+  },
+  [ServiceSectionName.HUB_WKY]: {
+    label: 'Hub-wky',
+    color: 'info',
+  },
+  [ServiceSectionName.HUB_KRA]: {
+    label: 'Hub-kra',
+    color: 'warning',
+  },
+  [ServiceSectionName.OUTDOOR]: {
+    label: 'Outdoor',
+    color: 'dark',
+  },
+};
 
 interface Ticket {
   id: number;

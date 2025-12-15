@@ -5,7 +5,13 @@ import { WorklogForm } from './worklog-form';
 import { PurchaseInfoForm, ServiceType } from './purchase-info-form';
 import { ProductForm } from '../../products/product-form';
 import { ICustomerForm } from '../../customers/customer-form-service';
-import { CreateServiceInput, TicketResource, TicketStatus, TicketView } from './ticket-resource';
+import {
+  CreateServiceInput,
+  ServiceSectionName,
+  TicketResource,
+  TicketStatus,
+  TicketView,
+} from './ticket-resource';
 import { Button } from '../../shared/components/ui/button';
 import { Card } from '../../shared/components/cards/card';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
@@ -19,7 +25,6 @@ import {
   IWorkLogForm,
   ProductCondition,
   ServiceSectionNameOptions,
-  ServiceSectionName,
 } from './ticket-form-service';
 import { IProductForm, ProductFormService } from '../../products/product-form-service';
 import { CustomerFormService } from '../../customers/customer-form-service';
