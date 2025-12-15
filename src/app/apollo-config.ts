@@ -1,6 +1,5 @@
 import { inject } from '@angular/core';
 import { ApolloClientOptions, ApolloLink, InMemoryCache } from '@apollo/client/core';
-import { HttpLink } from 'apollo-angular/http';
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { environment } from '../environments/environment';
@@ -8,9 +7,9 @@ import { offsetLimitPagination } from '@apollo/client/utilities';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from './shared/components/ui/notification-service';
+import { createUploadLink } from 'apollo-upload-client';
 
 export function apolloConfig(): ApolloClientOptions<unknown> {
-  const httpLink = inject(HttpLink);
   const oidc = inject(OidcSecurityService);
   const notificationStore = inject(NotificationService);
 
@@ -35,15 +34,16 @@ export function apolloConfig(): ApolloClientOptions<unknown> {
     return {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
+        'apollo-require-preflight': 'true',
       },
     };
   });
 
-  const link = ApolloLink.from([
-    errorLink,
-    authLink,
-    httpLink.create({ uri: environment.graphqlUri }),
-  ]);
+  const uploadLink = createUploadLink({
+    uri: environment.graphqlUri,
+  });
+
+  const link = ApolloLink.from([errorLink, authLink, uploadLink]);
 
   const cache = new InMemoryCache({
     typePolicies: {

@@ -134,6 +134,12 @@ const UPDATE = gql<{ updatePurchase: { id: number } }, unknown>`
   }
 `;
 
+const IMPORT = gql<boolean, { file: File }>`
+  mutation import($file: Upload!) {
+    import(file: $file)
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -189,6 +195,16 @@ export class InvoiceResource {
       .mutate({
         mutation: UPDATE,
         variables: { updatePurchaseInput },
+        refetchQueries: [{ query: PURCHASES, variables: { ...this.#purchasesRequestState() } }],
+      })
+      .pipe(map((res) => res.data));
+  }
+
+  import(file: File) {
+    return this.#apollo
+      .mutate({
+        mutation: IMPORT,
+        variables: { file },
         refetchQueries: [{ query: PURCHASES, variables: { ...this.#purchasesRequestState() } }],
       })
       .pipe(map((res) => res.data));
