@@ -237,6 +237,10 @@ export class TicketReply {
   };
 
   readonly ticketStatusInfoMap: Record<TicketStatus, { label: string; color: BadgeColor }> = {
+    [TicketStatus.HOLD]: {
+      label: 'Hold',
+      color: 'error',
+    },
     [TicketStatus.IN_PROGRESS]: {
       label: 'In Progress',
       color: 'warning',

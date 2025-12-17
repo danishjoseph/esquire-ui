@@ -16,6 +16,7 @@ import { IProductForm } from '../../products/product-form-service';
 import { BadgeColor } from '../../shared/components/ui/badge';
 
 export enum TicketStatus {
+  HOLD = 'HOLD',
   IN_PROGRESS = 'IN_PROGRESS',
   QC = 'QC',
   DELIVERY_READY = 'DELIVERY_READY',

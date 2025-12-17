@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { PurchaseStatus, ServiceStatus, WarrantyStatus } from './purchase-info-form';
 import { Option } from '../../shared/components/form/basic/select';
-import { ServiceSectionName } from './ticket-resource';
+import { ServiceSectionName, TicketStatus } from './ticket-resource';
 
 export enum LogType {
   DIAGNOSIS = 'DIAGNOSIS',
@@ -26,14 +26,6 @@ export enum ProductCondition {
   POOR = 'POOR',
   VERY_POOR = 'VERY_POOR',
   DAMAGED = 'DAMAGED',
-}
-
-export enum TicketStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  QC = 'QC',
-  DELIVERY_READY = 'DELIVERY_READY',
-  DELIVERED = 'DELIVERED',
-  CLOSED = 'CLOSED',
 }
 
 export const ServiceSectionNameOptions: Option[] = [

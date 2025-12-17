@@ -332,7 +332,7 @@ export class TicketForm {
     const service_logs = worklog?.work_logs as unknown as IWorkLog[];
     const accessories = worklog?.accessories as unknown as IAccessory[];
     return {
-      status: TicketStatus.IN_PROGRESS,
+      status: TicketStatus.HOLD,
       service_type: this.serviceType() || ServiceType.INHOUSE,
       ...(purchase?.service_status && { service_status: purchase.service_status }),
       quotation_amount: Number(serviceCharge?.quotation_amount),
