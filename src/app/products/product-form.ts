@@ -90,12 +90,11 @@ export const productCategoryOptions: Option[] = [
             />
           </div>
           <div class="col-span-1 sm:col-span-2">
-            <app-select
+            <app-input
               id="product_warranty"
               label="Product Warranty"
               placeholder="Product Warranty"
               formControlName="product_warranty"
-              [options]="['Yes', 'No']"
             />
           </div>
         </div>
