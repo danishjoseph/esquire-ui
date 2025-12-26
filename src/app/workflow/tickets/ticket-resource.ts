@@ -16,7 +16,6 @@ import { IProductForm } from '../../products/product-form-service';
 import { BadgeColor } from '../../shared/components/ui/badge';
 
 export enum TicketStatus {
-  HOLD = 'HOLD',
   IN_PROGRESS = 'IN_PROGRESS',
   QC = 'QC',
   DELIVERY_READY = 'DELIVERY_READY',
@@ -69,6 +68,7 @@ interface UpdateServiceInput {
   status: TicketStatus;
   service_section_name?: ServiceSectionName | null;
   service_logs?: FormGroup<IWorkLog>['value'][];
+  assign_user?: string | null;
 }
 
 interface UpdateServiceChargeInput {
@@ -110,6 +110,7 @@ export enum ServiceSectionName {
   HUB_WKY = 'HUB_WKY',
   HUB_KRA = 'HUB_KRA',
   OUTDOOR = 'OUTDOOR',
+  HOLD = 'HOLD',
 }
 
 export const serviceSectionInfoMap: Record<
@@ -154,6 +155,10 @@ export const serviceSectionInfoMap: Record<
   },
   [ServiceSectionName.OUTDOOR]: {
     label: 'Outdoor',
+    color: 'primary',
+  },
+  [ServiceSectionName.HOLD]: {
+    label: 'Hold',
     color: 'dark',
   },
 };
@@ -288,6 +293,10 @@ export interface TicketTable {
   updated_by?: {
     name: string | null;
   };
+  assigned_user?: {
+    sub: string;
+    name: string | null;
+  };
 }
 
 interface FilterOption<T> {
@@ -377,6 +386,10 @@ const TICKET_TABLE = gql`
     status
     updated_by {
       name
+    }
+    assigned_user {
+      name
+      sub
     }
   }
 `;

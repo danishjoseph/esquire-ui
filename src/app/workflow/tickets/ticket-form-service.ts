@@ -39,6 +39,7 @@ export const ServiceSectionNameOptions: Option[] = [
   { value: ServiceSectionName.HUB_WKY, label: 'Hub-wky' },
   { value: ServiceSectionName.HUB_KRA, label: 'Hub-kra' },
   { value: ServiceSectionName.OUTDOOR, label: 'Outdoor' },
+  { value: ServiceSectionName.HOLD, label: 'Hold' },
 ];
 
 export interface IWorkLog {
@@ -84,6 +85,7 @@ export interface ITicketUpdateForm {
   service_log_description: NonNullable<FormControl<string>>;
   service_section_name: FormControl<ServiceSectionName>;
   status: FormControl<TicketStatus>;
+  assigned_user: FormControl<string>;
 }
 
 export const numberValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
@@ -141,5 +143,6 @@ export class TicketFormService {
       validators: [Validators.required],
     }),
     service_section_name: new FormControl(),
+    assigned_user: new FormControl(),
   });
 }

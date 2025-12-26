@@ -170,15 +170,17 @@ export interface ITicketForm {
             [formGroup]="form.controls.serviceCharge"
             [ticketId]="ticketId()"
           />
-          <div class="mt-6">
-            <app-select
-              id="serviceSection"
-              label="Assign Section"
-              formControlName="serviceSection"
-              placeholder="Service section name"
-              [options]="SERVICE_SECTION_NAME_OPTIONS"
-            />
-          </div>
+          @if (!ticketId()) {
+            <div class="mt-6">
+              <app-select
+                id="serviceSection"
+                label="Assign Section"
+                formControlName="serviceSection"
+                placeholder="Service section name"
+                [options]="SERVICE_SECTION_NAME_OPTIONS"
+              />
+            </div>
+          }
         </app-card>
         @if (!ticketId()) {
           <div class="inline-flex self-end gap-3">
@@ -332,7 +334,7 @@ export class TicketForm {
     const service_logs = worklog?.work_logs as unknown as IWorkLog[];
     const accessories = worklog?.accessories as unknown as IAccessory[];
     return {
-      status: TicketStatus.HOLD,
+      status: TicketStatus.IN_PROGRESS,
       service_type: this.serviceType() || ServiceType.INHOUSE,
       ...(purchase?.service_status && { service_status: purchase.service_status }),
       quotation_amount: Number(serviceCharge?.quotation_amount),

@@ -14,14 +14,16 @@ import {
   ServiceSectionNameOptions,
   TicketFormService,
 } from './ticket-form-service';
-import { Select } from '../../shared/components/form/basic/select';
+import { Option, Select } from '../../shared/components/form/basic/select';
 import { Badge, BadgeColor } from '../../shared/components/ui/badge';
 import { statusToRouteMap } from './ticket-list';
 import { NotificationService } from '../../shared/components/ui/notification-service';
+import { UserResource, UserRole } from '../../settings/users/user-resource';
 
 export enum ReplyType {
   STATUS_UPDATE = 'STATUS_UPDATE',
   SECTION_UPDATE = 'SECTION_UPDATE',
+  ASSIGN = 'ASSIGN',
 }
 
 @Component({
@@ -129,6 +131,14 @@ export enum ReplyType {
                     [options]="SERVICE_SECTION_NAME_OPTIONS"
                   />
                 }
+                @if (ticketInfo().type === REPLY_TYPE.ASSIGN) {
+                  <app-select
+                    id="assign_engineer"
+                    formControlName="assigned_user"
+                    placeholder="Assign Engineer"
+                    [options]="assignEngineerOptions()"
+                  />
+                }
               </div>
               <div class="flex items-center justify-center md:justify-end p-3">
                 <app-button type="submit" [disabled]="form().invalid">
@@ -156,6 +166,10 @@ export class TicketReply {
     currentStatus: null,
     serviceSection: null,
     type: null,
+    assigned_user: {
+      name: null,
+      sub: null,
+    },
   });
 
   readonly nextStatus = computed(() => {
@@ -174,6 +188,7 @@ export class TicketReply {
   });
 
   protected ticketResource = inject(TicketResource);
+  protected userResource = inject(UserResource);
   protected router = inject(Router);
   protected destroyRef = inject(DestroyRef);
   protected notificationService = inject(NotificationService);
@@ -186,14 +201,18 @@ export class TicketReply {
   constructor() {
     const state = this.router.currentNavigation()?.extras.state;
     if (state && typeof state === 'object' && 'ticketId' in state && 'currentStatus' in state) {
-      const { ticketId, currentStatus, serviceSection, type } = state;
+      const { ticketId, currentStatus, serviceSection, type, assigned_user } = state;
       this.ticketInfo.set({
         ticketId,
         currentStatus,
         serviceSection,
         type,
+        assigned_user,
       });
-      this.form().controls.service_section_name.setValue(serviceSection);
+      this.form().patchValue({
+        service_section_name: serviceSection,
+        assigned_user: assigned_user?.name ?? null,
+      });
     } else {
       this.router.navigate(['service/tickets']);
     }
@@ -202,6 +221,11 @@ export class TicketReply {
   protected resource = rxResource({
     params: () => this.ticketInfo().ticketId,
     stream: ({ params }) => (params ? this.ticketResource.serviceLogs(params) : EMPTY),
+  });
+
+  protected userListResource = rxResource({
+    params: () => this.ticketInfo().ticketId,
+    stream: ({ params }) => (params ? this.userResource.users(20, 0, '') : EMPTY),
   });
 
   protected serviceLogs = computed(() => {
@@ -214,7 +238,18 @@ export class TicketReply {
   protected buttonText = computed(() => {
     const { type } = this.ticketInfo();
     if (type === ReplyType.SECTION_UPDATE) return 'Update';
+    else if (type === ReplyType.ASSIGN) return 'Assign';
     else return `Move to ${statusToRouteMap[this.nextStatus()]}`;
+  });
+
+  readonly assignEngineerOptions = computed<Option[]>(() => {
+    if (this.userListResource.hasValue()) {
+      const { users } = this.userListResource.value();
+      return users
+        .filter((u) => u.role === UserRole.ENGINEER)
+        .map((u) => ({ value: u.sub, label: u.name }));
+    }
+    return [];
   });
 
   readonly logTypeInfoMap: Record<LogType, { label: string; color: BadgeColor }> = {
@@ -237,10 +272,6 @@ export class TicketReply {
   };
 
   readonly ticketStatusInfoMap: Record<TicketStatus, { label: string; color: BadgeColor }> = {
-    [TicketStatus.HOLD]: {
-      label: 'Hold',
-      color: 'error',
-    },
     [TicketStatus.IN_PROGRESS]: {
       label: 'In Progress',
       color: 'warning',
@@ -296,6 +327,7 @@ export class TicketReply {
           : TicketStatus.IN_PROGRESS,
       service_logs: [workLog],
       service_section_name: formValue.service_section_name,
+      assigned_user: formValue.assigned_user,
     };
     return this.ticketResource
       .update(serviceData)
@@ -303,12 +335,12 @@ export class TicketReply {
       .subscribe({
         complete: () => {
           this.form().reset();
-          if (this.ticketInfo().type === ReplyType.SECTION_UPDATE) {
+          if (this.ticketInfo().type === ReplyType.STATUS_UPDATE) {
+            this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
+          } else {
             this.router.navigateByUrl(
               `/service/tickets/${statusToRouteMap[this.ticketInfo().currentStatus || TicketStatus.IN_PROGRESS]}`,
             );
-          } else {
-            this.router.navigateByUrl(`/service/tickets/${statusToRouteMap[this.nextStatus()]}`);
           }
           this.notificationService.showNotification('Feedback updated');
         },
